@@ -1,0 +1,17 @@
+RUN: run_1767042868
+GAME: chelsea_aston_villa_2025-12-27
+Current game time: 43:00
+SCORE: 0-0
+----------------------------------------
+LAST 10 COMMENTS:
+----------------------------------------
+[GAME 25:00] Highlight: ARRÊT ! Martinez s'interpose devant Joao Pedro ! Lancé par une passe en retrait de Neto, sa finition piquée est repoussée par le gardien argentin.
+[GAME 27:00] Commentary: Appels optimistes à un penalty après un centre de Neto qui s'écrase sur un défenseur de Villa ; l'arbitre fait signe de jouer. Palmer perd ensuite le ballon au bord de la surface.
+[GAME 29:00] Commentary: Emery semble pensif sur la ligne de touche. Maresca suit de loin : l'entraîneur de Chelsea purge une suspension d'un match.
+[GAME 32:00] Commentary: Joao Pedro s'écroule sous le défi de Lindelof en tentant de reprendre un centre ; gros appels pour un penalty, mais l'arbitre et la VAR laissent jouer.
+[GAME 34:00] Highlight: À CÔTÉ ! James frappe à l'entrée de la surface après une combinaison Garnacho–Cucurella–Neto, mais c'est largement à côté du poteau gauche.
+[GAME 37:00] Goal: BUT !!! CHELSEA MÈNE 1-0 ! Sur corner, James dépose le ballon dans une surface bondée, Martinez ne parvient pas à repousser et le ballon touche Joao Pedro avant de finir au fond.
+[GAME 37:00] Assist: Passe décisive : James enroule un corner dangereux (Olimpico refusé par une légère déviation de Joao Pedro).
+[GAME 39:00] Commentary: Chelsea mérite pleinement son avantage, mais Villa ne paniquera pas : ils ont renversé la situation pour s'imposer à cinq reprises sur les huit matchs où ils ont été menés cette saison.
+[GAME 41:00] Commentary: Palmer perd le ballon, puis frappe de 18 mètres : Martinez repousse assez facilement. Chelsea peut estimer qu'ils devraient mener plus largement.
+[GAME 43:00] Commentary: Stat : après ce corner, seul Bruno Fernandes (6) a délivré plus de passes décisives sur coups de pied arrêtés cette saison que James (4).

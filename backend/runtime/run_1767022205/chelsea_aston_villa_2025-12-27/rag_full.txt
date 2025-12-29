@@ -1,0 +1,59 @@
+RUN: run_1767022205
+GAME: chelsea_aston_villa_2025-12-27
+Current stream time: 2025-12-29 16:53:21
+Current game time: 74:00
+SCORE: 1-0
+----------------------------------------
+[STREAM 2025-12-29 16:30:05] [GAME 2:00] Highlight: PAS LOIN ! Après avoir parfaitement contrôlé une passe piquée de Caicedo et s'être débarrassé de Kamara, Palmer se crée l'espace pour frapper à l'entrée de la surface. Mais sa tentative fuit largement à côté du poteau gauche !
+[STREAM 2025-12-29 16:30:05] [GAME 4:00] Commentary: Le bon début des locaux se poursuit, alors que Chelsea fait circuler le ballon avec intention dans la moitié de terrain d'Aston Villa. Lorsqu'ils finissent par perdre la possession, Rogers menace de filer en contre, mais James revient pour effectuer une intervention importante.
+[STREAM 2025-12-29 16:30:05] [GAME 6:00] Commentary: Déjà, deux prétendants au poste de numéro 10 de l'Angleterre ont laissé entrevoir leur potentiel. Palmer s'est créé une belle occasion, et Rogers a démontré sa capacité à porter le ballon à pleine vitesse.
+[STREAM 2025-12-29 16:30:05] [GAME 8:00] Commentary: Quand Kamara s'échappe de sa propre surface et tente de lancer une contre-attaque rapide, Caicedo tacle en glissade de manière un peu trop engagée. Il évite un avertissement précoce : l'arbitre se contente d'accorder un coup franc à Villa.
+[STREAM 2025-12-29 16:30:05] [GAME 10:00] Commentary: Aston Villa ne sont pas favoris selon le prédicteur Opta. En l'état, Chelsea ont 42% de chances de s'imposer, contre 30% pour les Villans.
+[STREAM 2025-12-29 16:30:05] [GAME 12:00] Commentary: Le coup franc timide de Neto depuis la droite est repoussé de la tête par Maatsen, avant que Villa ne dégage. Chelsea continue de dominer possession et territoire.
+[STREAM 2025-12-29 16:30:05] [GAME 14:00] Commentary: Cucurella et Garnacho combinent à gauche dans la surface de Villa, sans réussite. Cucurella réagit à un challenge de Rogers et reçoit une poussée ; malgré une chute spectaculaire, aucune autre décision n'est prise.
+[STREAM 2025-12-29 16:30:05] [GAME 16:00] Commentary: Chelsea maîtrise totalement le match, Villa reste très bas. Possession : 77% pour Chelsea, mais aucune frappe cadrée jusqu'ici.
+[STREAM 2025-12-29 16:30:05] [GAME 18:00] Highlight: RATÉ ! Fernandez doit marquer ! Après une percée de Palmer, Garnacho sert Fernandez, qui enroule à côté du poteau droit : il devait cadrer.
+[STREAM 2025-12-29 16:30:05] [GAME 20:00] Commentary: Cash reste au sol en se tenant l'arrière de la tête après un duel dans la surface avec Fernandez, mais cela ne semble pas grave. Villa profite d'une brève interruption.
+[STREAM 2025-12-29 16:30:05] [GAME 21:00] Commentary: Caicedo frappe de 18 mètres sur la défense, Chelsea récupère et reconstruit. Buendia chipe le ballon à Palmer puis obtient un coup franc de Fernandez.
+[STREAM 2025-12-29 16:30:05] [GAME 23:00] Commentary: Une potentielle contre-attaque de Rogers est annihilée par Chalobah. Les visiteurs n'ont réussi qu'une seule passe dans le dernier tiers jusqu'ici.
+[STREAM 2025-12-29 16:30:05] [GAME 25:00] Highlight: ARRÊT ! Martinez s'interpose devant Joao Pedro ! Lancé par une passe en retrait de Neto, sa finition piquée est repoussée par le gardien argentin.
+[STREAM 2025-12-29 16:30:05] [GAME 27:00] Commentary: Appels optimistes à un penalty après un centre de Neto qui s'écrase sur un défenseur de Villa ; l'arbitre fait signe de jouer. Palmer perd ensuite le ballon au bord de la surface.
+[STREAM 2025-12-29 16:30:05] [GAME 29:00] Commentary: Emery semble pensif sur la ligne de touche. Maresca suit de loin : l'entraîneur de Chelsea purge une suspension d'un match.
+[STREAM 2025-12-29 16:30:05] [GAME 30:00] CardYellow: Carton jaune : Cash fauche Garnacho avec un tacle vilain. Suspension d'un match.
+[STREAM 2025-12-29 16:30:05] [GAME 32:00] Commentary: Joao Pedro s'écroule sous le défi de Lindelof en tentant de reprendre un centre ; gros appels pour un penalty, mais l'arbitre et la VAR laissent jouer.
+[STREAM 2025-12-29 16:30:05] [GAME 34:00] Highlight: À CÔTÉ ! James frappe à l'entrée de la surface après une combinaison Garnacho–Cucurella–Neto, mais c'est largement à côté du poteau gauche.
+[STREAM 2025-12-29 16:30:05] [GAME 37:00] Goal: BUT !!! CHELSEA MÈNE 1-0 ! Sur corner, James dépose le ballon dans une surface bondée, Martinez ne parvient pas à repousser et le ballon touche Joao Pedro avant de finir au fond.
+[STREAM 2025-12-29 16:30:05] [GAME 37:00] Assist: Passe décisive : James enroule un corner dangereux (Olimpico refusé par une légère déviation de Joao Pedro).
+[STREAM 2025-12-29 16:30:05] [GAME 39:00] Commentary: Chelsea mérite pleinement son avantage, mais Villa ne paniquera pas : ils ont renversé la situation pour s'imposer à cinq reprises sur les huit matchs où ils ont été menés cette saison.
+[STREAM 2025-12-29 16:30:05] [GAME 41:00] Commentary: Palmer perd le ballon, puis frappe de 18 mètres : Martinez repousse assez facilement. Chelsea peut estimer qu'ils devraient mener plus largement.
+[STREAM 2025-12-29 16:30:05] [GAME 43:00] Commentary: Stat : après ce corner, seul Bruno Fernandes (6) a délivré plus de passes décisives sur coups de pied arrêtés cette saison que James (4).
+[STREAM 2025-12-29 16:30:05] [GAME 46:00] StoppageTime: Au moins deux minutes de temps additionnel.
+[STREAM 2025-12-29 16:30:05] [GAME 46:00] PeriodStart: Chelsea donne le coup d'envoi, c'est reparti à Stamford Bridge !
+[STREAM 2025-12-29 16:30:05] [GAME 46:00] Commentary: Chelsea a livré une première période solide ; le but vient d'un coup de pied arrêté. Villa a été en dessous de son niveau et n'a pas ouvert son compteur.
+[STREAM 2025-12-29 16:30:05] [GAME 47:00] Commentary: McGinn enroule un coup franc mal ajusté directement vers Sanchez, qui capte facilement.
+[STREAM 2025-12-29 16:30:05] [GAME 47:00] VAR: VÉRIFICATION DE PENALTY ! Le ballon heurte le bras de Maatsen et file en corner. Malgré les protestations, une rapide vérification VAR décide que le jeu doit continuer.
+[STREAM 2025-12-29 16:30:05] [GAME 48:00] PeriodEnd: MI-TEMPS : CHELSEA 1-0 ASTON VILLA.
+[STREAM 2025-12-29 16:30:05] [GAME 49:00] Commentary: Selon le prédicteur Opta, les chances de victoire de Villa chutent à 11% (23% de chances de nul).
+[STREAM 2025-12-29 16:30:05] [GAME 30:00] EVENT: Card | Yellow Card | team=Aston Villa | player=Matty Cash
+[STREAM 2025-12-29 16:30:05] [GAME 37:00] EVENT: Goal | Normal Goal | team=Chelsea | player=Joao Pedro
+[STREAM 2025-12-29 16:30:05] [GAME 50:00] SCORE: 1-0 (score at offset)
+[STREAM 2025-12-29 16:32:06] [GAME 53:00] Highlight: OCCASION ! Corner de Villa, Cash dépose au second poteau. Sanchez capte puis Chelsea contre : Palmer centre fort devant le but pour Garnacho, mais un tacle de McGinn empêche le but.
+[STREAM 2025-12-29 16:34:06] [GAME 55:00] Highlight: ARRÊT ! Martinez détourne ce qui semblait être un centre de James ; Aston Villa se dégage ensuite en catastrophe.
+[STREAM 2025-12-29 16:36:07] [GAME 57:00] CardYellow: Carton jaune : Rogers est averti après un accrochage avec James avant un corner.
+[STREAM 2025-12-29 16:36:08] [GAME 57:00] CardYellow: Carton jaune : James est averti pour son implication dans l'accrochage avec Rogers.
+[STREAM 2025-12-29 16:37:08] [GAME 58:00] Substitution: Watkins remplace Buendia (début d'un triple changement).
+[STREAM 2025-12-29 16:38:08] [GAME 59:00] Substitution: Sancho entre à la place de Malen.
+[STREAM 2025-12-29 16:38:09] [GAME 59:00] Substitution: Onana remplace McGinn au milieu.
+[STREAM 2025-12-29 16:40:09] [GAME 61:00] Highlight: ARRÊT ! Trouvé par Watkins, Kamara pénètre dans la surface ; Sanchez sort vite et réalise un arrêt courageux en se jetant dans les pieds.
+[STREAM 2025-12-29 16:42:10] [GAME 63:00] Goal: BUT !!! ASTON VILLA RÉPOND ! 1-1. Watkins reprend une passe de Rogers, résiste à Badiashile, voit sa frappe repoussée par Sanchez puis le ballon rebondit sur lui et finit au fond.
+[STREAM 2025-12-29 16:44:12] [GAME 65:00] Commentary: Stat/contexte : Watkins a marqué dans trois de ses quatre dernières apparitions de Premier League à Stamford Bridge. Chelsea a encaissé six buts de remplaçants en PL cette saison.
+[STREAM 2025-12-29 16:46:13] [GAME 67:00] Highlight: ARRÊT DÉCISIF ! Sancho sert Maatsen ; depuis un angle très fermé, la frappe montante est repoussée des deux mains par Sanchez.
+[STREAM 2025-12-29 16:47:14] [GAME 68:00] CardYellow: Carton jaune : Chalobah averti pour un duel en retard sur Rogers.
+[STREAM 2025-12-29 16:48:15] [GAME 69:00] Substitution: Delap remplace le buteur Joao Pedro en attaque.
+[STREAM 2025-12-29 16:48:18] [GAME 69:00] Substitution: Gittens remplace Garnacho sur l'aile.
+[STREAM 2025-12-29 16:48:19] [GAME 69:00] Substitution: Cucurella cède sa place à Gusto.
+[STREAM 2025-12-29 16:49:19] [GAME 70:00] Highlight: ARRÊT ! Sanchez se détend sur sa gauche pour repousser une nouvelle frappe de Watkins, déviée et passée devant le but.
+[STREAM 2025-12-29 16:50:20] [GAME 71:00] CardYellow: Carton jaune : Caicedo tire Tielemans en arrière par le maillot.
+[STREAM 2025-12-29 16:50:20] [GAME 71:00] CardYellow: Carton jaune : Delap percute Onana avec un tacle en retard.
+[STREAM 2025-12-29 16:51:21] [GAME 72:00] Substitution: Palmer sort sous les applaudissements ; Estevao fait son retour.
+[STREAM 2025-12-29 16:53:21] [GAME 74:00] Commentary: Rogers enroule un coup franc de 23 mètres qui s'écrase sur le haut du filet.

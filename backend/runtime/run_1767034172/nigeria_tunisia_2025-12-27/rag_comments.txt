@@ -1,0 +1,17 @@
+RUN: run_1767034172
+GAME: nigeria_tunisia_2025-12-27
+Current game time: 10:00
+SCORE: 0-0
+----------------------------------------
+LAST 10 COMMENTS:
+----------------------------------------
+[GAME 5:00] Foul: Faute de Montassar Talbi (Tunisie).
+[GAME 5:00] FreeKickAwarded: Akor Adams (Nigeria) se voit accorder un coup franc dans sa moitié de terrain.
+[GAME 6:00] ShotOffTarget: Tir non cadré. Victor Osimhen (Nigeria) du pied droit de l'extérieur de la surface de réparation. Dernière passe de Bright Osayi-Samuel.
+[GAME 6:00] FreeKickAwarded: Hazem Mastouri (Tunisie) se voit accorder un coup franc sur l'aile droite.
+[GAME 6:00] Foul: Faute de Calvin Bassey (Nigeria).
+[GAME 8:00] FreeKickAwarded: Hannibal Mejbri (Tunisie) se voit accorder un coup franc dans sa moitié de terrain.
+[GAME 8:00] Foul: Faute de Bright Osayi-Samuel (Nigeria).
+[GAME 9:00] ShotOffTarget: Tir non cadré. Victor Osimhen (Nigeria) de la tête à bout portant. Dernière passe de Akor Adams suite à un centre.
+[GAME 10:00] ShotBlocked: Tir contré. Bright Osayi-Samuel (Nigeria) du pied gauche de l'extérieur de la surface de réparation. Dernière passe de Alex Iwobi.
+[GAME 10:00] Corner: Corner, Nigeria. Corner concédé par Dylan Bronn.

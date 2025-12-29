@@ -1,0 +1,17 @@
+RUN: run_1767031959
+GAME: nigeria_tunisia_2025-12-27
+Current game time: 69:00
+SCORE: 2-0
+----------------------------------------
+LAST 10 COMMENTS:
+----------------------------------------
+[GAME 61:00] ShotBlocked: Tir contré. Akor Adams (Nigeria) du pied gauche depuis le point de penalty. Dernière passe de Victor Osimhen d'une passe de la tête.
+[GAME 61:00] Corner: Corner, Nigeria. Corner concédé par Dylan Bronn.
+[GAME 61:00] Substitution: Remplacement, Tunisie. Sebastian Tounekti remplace Mohamed Ben Romdhane sur blessure.
+[GAME 62:00] FreeKickAwarded: Ali Abdi (Tunisie) se voit accorder un coup franc dans sa moitié de terrain.
+[GAME 62:00] Foul: Faute de Victor Osimhen (Nigeria).
+[GAME 63:00] Foul: Faute de Ferjani Sassi (Tunisie).
+[GAME 63:00] FreeKickAwarded: Wilfred Ndidi (Nigeria) se voit accorder un coup franc sur l'aile droite.
+[GAME 67:00] Goal: But! Nigeria 3, Tunisie 0. Ademola Lookman (Nigeria) marque du pied gauche. Passe décisive de Victor Osimhen suite à une contre-attaque.
+[GAME 69:00] FreeKickAwarded: Hazem Mastouri (Tunisie) se voit accorder un coup franc sur l'aile droite.
+[GAME 69:00] Foul: Faute de Calvin Bassey (Nigeria).

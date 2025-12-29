@@ -67,7 +67,10 @@ class RagEngine:
             must = [
                 FieldCondition(key="match_id", match=MatchValue(value=match_id)),
             ]
-            if run_id:
+            
+            # IMPORTANT: Only filter by run_id if it's explicitly provided AND not None
+            # This allows querying data without run_id (legacy data)
+            if run_id and run_id != "None":
                 must.append(FieldCondition(key="run_id", match=MatchValue(value=run_id)))
 
             if minute_gte is not None or minute_lte is not None:
@@ -80,6 +83,8 @@ class RagEngine:
                         ),
                     )
                 )
+
+            print(f"🔍 RAG Query - match_id: {match_id}, run_id: {run_id}, minute range: {minute_gte}-{minute_lte}")
 
             # Try different methods depending on qdrant-client version
             try:
@@ -101,6 +106,8 @@ class RagEngine:
                     query_filter=Filter(must=must),
                 )
 
+            print(f"✓ Found {len(results)} results")
+
             items: List[RetrievedItem] = []
             for hit in results:
                 p = hit.payload or {}
@@ -119,7 +126,7 @@ class RagEngine:
             items.sort(key=lambda x: (x.minute, x.tsec))
             return items
         except Exception as e:
-            print(f"Error in retrieve: {e}")
+            print(f"❌ Error in retrieve: {e}")
             import traceback
             traceback.print_exc()
             return []

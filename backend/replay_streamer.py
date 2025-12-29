@@ -1,13 +1,28 @@
+# backend/replay_streamer.py
+"""
+Replay Streamer - Simulates a Live Streaming API
+
+This module simulates what a real streaming API would do:
+  1. Load historical match data from disk
+  2. Stream it chronologically through Kafka topics
+  3. Publish to Kafka ONLY (no direct database writes)
+
+In a real system:
+  Real API → Kafka
+
+In your simulation:
+  This Producer → Kafka
+
+The downstream consumer (kafka_to_qdrant_consumer.py) handles all data ingestion.
+"""
+
 import json
 import time
 import threading
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
-from collections import deque
 
 from kafka import KafkaProducer
-
-from backend.qdrant_ingest import QdrantIngestor
 
 
 # -------------------------
@@ -147,28 +162,6 @@ def apply_goal(score_home: int, score_away: int, scoring_team: str, home: str, a
 
 
 # -------------------------
-# Readable summary for events (LLM)
-# -------------------------
-
-def event_summary(e: dict) -> str:
-    etype = e.get("type") or e.get("event") or e.get("name") or "Event"
-    detail = e.get("detail")
-    team = extract_team_name(e)
-    player = None
-    if isinstance(e.get("player"), dict):
-        player = e["player"].get("name")
-
-    parts = [str(etype)]
-    if isinstance(detail, str) and detail.strip():
-        parts.append(detail.strip())
-    if isinstance(team, str):
-        parts.append(f"team={team}")
-    if isinstance(player, str) and player.strip():
-        parts.append(f"player={player.strip()}")
-    return " | ".join(parts)
-
-
-# -------------------------
 # ReplayManager
 # -------------------------
 
@@ -182,7 +175,8 @@ class ReplayManager:
       - games.state    : progress snapshots
       - games.scores   : score changes
 
-    Also ingests every streamed item into Qdrant (for RAG).
+    NOTE: This producer does NOT write to Qdrant directly.
+    All data ingestion is handled by the separate kafka_to_qdrant_consumer service.
     """
 
     def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092"):
@@ -201,9 +195,6 @@ class ReplayManager:
             bootstrap_servers=self.kafka_bootstrap,
             value_serializer=lambda v: json.dumps(v, ensure_ascii=False).encode("utf-8"),
         )
-
-        # Qdrant ingestor (RAG storage)
-        self.qdrant_ingestor = QdrantIngestor()
 
     def list_games(self) -> List[dict]:
         games: List[dict] = []
@@ -229,36 +220,30 @@ class ReplayManager:
             }
 
     def stop_all(self):
-        for ev in self._stop_flags.values():
-            ev.set()
+        with self._lock:
+            for flag in self._stop_flags.values():
+                flag.set()
+            self._active_run_id = None
+
+        for t in self._threads.values():
+            t.join(timeout=5)
 
         with self._lock:
             self._progress.clear()
             self._threads.clear()
             self._stop_flags.clear()
-            self._active_run_id = None
 
-    def start_games(self, run_id: str, game_start_offsets_sec: Dict[str, int], tick_sec: int):
-        tick_sec = max(1, int(tick_sec))
-        if self._active_run_id is None:
+    def start_games(self, run_id: str, game_start_offsets_sec: Dict[str, int], tick_sec: int = 60):
+        with self._lock:
             self._active_run_id = run_id
+            for gid, offset in game_start_offsets_sec.items():
+                if gid in self._threads:
+                    continue
 
-        for game_id, start_at_sec in game_start_offsets_sec.items():
-            start_at_sec = max(0, int(start_at_sec))
-
-            if game_id in self._threads and self._threads[game_id].is_alive():
-                continue
-
-            stop_event = threading.Event()
-            self._stop_flags[game_id] = stop_event
-
-            with self._lock:
-                self._progress[game_id] = {
+                self._progress[gid] = {
                     "status": "starting",
-                    "tick_sec": tick_sec,
-                    "start_at_sec": start_at_sec,
-                    "known_time_sec": start_at_sec,
-                    "known_minute": start_at_sec // 60,
+                    "known_time_sec": offset,
+                    "known_minute": offset // 60,
                     "comments_sent_total": 0,
                     "events_sent_total": 0,
                     "score_str": "0-0",
@@ -266,18 +251,20 @@ class ReplayManager:
                     "last_update_unix": int(time.time()),
                 }
 
-            t = threading.Thread(
-                target=self._stream_one_game,
-                args=(run_id, game_id, tick_sec, start_at_sec, stop_event),
-                daemon=True,
-            )
-            self._threads[game_id] = t
-            t.start()
+                stop_flag = threading.Event()
+                self._stop_flags[gid] = stop_flag
 
-    # ---------- kafka helpers ----------
+                t = threading.Thread(
+                    target=self._stream_one_game,
+                    args=(run_id, gid, tick_sec, offset, stop_flag),
+                    daemon=True,
+                )
+                t.start()
+                self._threads[gid] = t
 
-    def _publish_state(self, run_id: str, game_id: str, tick_sec: int, known_time_sec: int, status: str,
-                       comments_sent: int, events_sent: int, score_str: str, error: Optional[str] = None):
+    # ---------- Kafka publishers ----------
+
+    def _publish_state(self, run_id: str, game_id: str, tick_sec: int, known_time_sec: int, status: str, comments_sent: int, events_sent: int, score_str: str, error: Optional[str] = None):
         payload = {
             "run_id": run_id,
             "game_id": game_id,
@@ -403,7 +390,7 @@ class ReplayManager:
                 else:
                     break
 
-            # Stream comments
+            # Stream comments to Kafka ONLY
             for tsec, c in comments_batch:
                 payload = {
                     "run_id": run_id,
@@ -416,18 +403,7 @@ class ReplayManager:
                 }
                 self.producer.send("games.comments", value=payload)
 
-                # Qdrant ingest
-                self.qdrant_ingestor.store_stream_item(
-                    run_id=run_id,
-                    match_id=game_id,
-                    minute=int(payload["minute"]),
-                    tsec=tsec,
-                    source="comment",
-                    text=str(payload.get("text") or ""),
-                    event_type=str(payload.get("type") or "Commentary"),
-                )
-
-            # Stream events + compute score changes
+            # Stream events to Kafka ONLY
             for tsec, e in events_batch:
                 etype = e.get("type") or e.get("event") or e.get("name") or "Event"
                 payload = {
@@ -439,19 +415,6 @@ class ReplayManager:
                 }
                 self.producer.send("games.events", value=payload)
 
-                # Qdrant ingest (event summary is good for text)
-                team_name = extract_team_name(e)
-                self.qdrant_ingestor.store_stream_item(
-                    run_id=run_id,
-                    match_id=game_id,
-                    minute=int(tsec // 60),
-                    tsec=tsec,
-                    source="event",
-                    text=event_summary(e),
-                    team=team_name,
-                    event_type=str(etype),
-                )
-
                 # Score updates
                 if is_goal_event(e) and home and away:
                     scoring_team = extract_team_name(e)
@@ -462,19 +425,8 @@ class ReplayManager:
                             score_home, score_away = new_home, new_away
                             score_str = f"{score_home}-{score_away}"
 
-                            # Kafka score topic
+                            # Publish score update to Kafka
                             self._publish_score(run_id, game_id, tsec, score_home, score_away, why)
-
-                            # Qdrant ingest score update
-                            self.qdrant_ingestor.store_stream_item(
-                                run_id=run_id,
-                                match_id=game_id,
-                                minute=int(tsec // 60),
-                                tsec=tsec,
-                                source="score",
-                                text=f"Score update: {score_str}. Reason: {why}",
-                                event_type="ScoreUpdate",
-                            )
 
             # Update known time without drift
             if comments_batch:

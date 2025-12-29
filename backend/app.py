@@ -9,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from backend.replay_streamer import ReplayManager
-from backend.rag_engine import RagEngine
+from backend.rag_engine_simple import SimpleRagEngine
+from backend.kafka_context_store import KafkaContextStore
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]  # repo root
@@ -25,15 +26,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Initialize services
 replay_manager = ReplayManager(project_root=PROJECT_ROOT, kafka_bootstrap=KAFKA_BOOTSTRAP)
-rag_engine = RagEngine()
+rag_engine = SimpleRagEngine()
+context_store = KafkaContextStore(project_root=PROJECT_ROOT, kafka_bootstrap=KAFKA_BOOTSTRAP, top_k=10)
 
 
 # ------------- Models -------------
 
 class StartGameItem(BaseModel):
     game_id: str
-    startAtSec: int = 0
+    startAtMinute: int = 0
+    startAtExtra: int = 0
 
 
 class StartReplayReq(BaseModel):
@@ -43,8 +47,6 @@ class StartReplayReq(BaseModel):
 class ChatReq(BaseModel):
     game_id: str
     message: str
-    top_k: int = 6
-    minute_window: Optional[int] = 10  # last 10 minutes by default
 
 
 # ------------- Helpers -------------
@@ -54,6 +56,39 @@ def next_run_id() -> str:
 
 
 # ------------- API -------------
+
+@app.get("/")
+def root():
+    """Root endpoint with service status."""
+    return {
+        "service": "Football RAG System (Simple Time-Based)",
+        "status": "running",
+        "approach": "File-based context retrieval (No vector search)",
+        "context_files": [
+            "rag_comments.txt - Last 10 comments",
+            "rag_events.txt - Last 10 events", 
+            "rag_scores.txt - Last 10 goals"
+        ],
+        "endpoints": {
+            "games": "/api/games",
+            "replay_start": "/api/replay/start",
+            "replay_progress": "/api/replay/progress",
+            "replay_reset": "/api/replay/reset",
+            "chat": "/api/chat",
+            "docs": "/docs"
+        }
+    }
+
+
+@app.get("/api/health")
+def health_check():
+    """Health check endpoint."""
+    return {
+        "status": "healthy",
+        "context_store_running": context_store.get_run_id() is not None,
+        "timestamp": int(time.time())
+    }
+
 
 @app.get("/api/games")
 def list_games():
@@ -68,14 +103,37 @@ def replay_progress():
 @app.post("/api/replay/reset")
 def replay_reset():
     replay_manager.stop_all()
+    context_store.reset()
     return {"ok": True}
 
 
 @app.post("/api/replay/start")
 def start_replay(req: StartReplayReq):
     run_id = next_run_id()
-    start_map: Dict[str, int] = {g.game_id: int(g.startAtSec) for g in req.games}
+    
+    # Convert minute+extra to seconds
+    # Formula: (minute + extra) * 60
+    start_map: Dict[str, int] = {
+        g.game_id: (g.startAtMinute + g.startAtExtra) * 60 
+        for g in req.games
+    }
+    
+    print(f"\n🎬 Starting replay:")
+    print(f"   Run ID: {run_id}")
+    for g in req.games:
+        total_sec = (g.startAtMinute + g.startAtExtra) * 60
+        print(f"   {g.game_id}: minute={g.startAtMinute}, extra={g.startAtExtra} → {total_sec}s")
+    
+    # Start the replay manager (Kafka producer)
     replay_manager.start_games(run_id=run_id, game_start_offsets_sec=start_map, tick_sec=TICK_SEC_DEFAULT)
+    
+    # Start the context store (Kafka consumer)
+    game_ids = list(start_map.keys())
+    context_store.start(run_id=run_id, active_game_ids=game_ids, game_start_offsets_sec=start_map)
+    
+    print(f"   Context files: backend/runtime/{run_id}/{{game_id}}/")
+    print("="*70 + "\n")
+    
     return {"ok": True, "run_id": run_id, "games": start_map}
 
 
@@ -83,47 +141,45 @@ def start_replay(req: StartReplayReq):
 def chat(req: ChatReq):
     # DEBUG: Print what we received
     print("\n" + "="*70)
-    print("📨 CHAT REQUEST RECEIVED")
+    print("💬 CHAT REQUEST RECEIVED")
     print("="*70)
     print(f"game_id: {req.game_id}")
     print(f"message: {req.message}")
-    print(f"top_k: {req.top_k}")
-    print(f"minute_window: {req.minute_window}")
     
-    # take current minute from progress (for minute_window retrieval)
+    # Get current progress
     prog = replay_manager.get_progress()
-    print(f"\n📊 Current Progress:")
-    print(f"  run_id: {prog.get('run_id')}")
-    print(f"  active_game_ids: {prog.get('active_game_ids')}")
+    run_id = prog.get("run_id")
     
-    p = (prog.get("progress") or {}).get(req.game_id) or {}
-    current_minute = p.get("known_minute")
-    run_id = prog.get("run_id")  # isolate by current run
-    
-    print(f"\n🎮 Game Info:")
-    print(f"  current_minute: {current_minute}")
+    print(f"\n📊 Current State:")
     print(f"  run_id: {run_id}")
-    print(f"  game progress: {p}")
+    print(f"  active_games: {prog.get('active_game_ids')}")
     
-    print(f"\n🔍 Calling RAG engine with:")
-    print(f"  match_id: {req.game_id}")
-    print(f"  run_id: {run_id}")
-    print(f"  current_minute: {current_minute}")
-    print(f"  minute_window: {req.minute_window}")
-    print("="*70 + "\n")
-
+    if not run_id:
+        return {
+            "answer": "No active stream. Please start a replay first.",
+            "contexts": {}
+        }
+    
+    # Call simple RAG engine (reads from files)
+    print(f"\n🔍 Calling Simple RAG Engine...")
+    print(f"  Will read context from: backend/runtime/{run_id}/{req.game_id}/")
+    
     result = rag_engine.answer(
         question=req.message,
         match_id=req.game_id,
-        top_k=req.top_k,
-        minute_window=req.minute_window,
-        current_minute=int(current_minute) if current_minute is not None else None,
         run_id=run_id,
     )
     
-    print(f"✅ RAG Response:")
-    print(f"  contexts found: {len(result.get('contexts', []))}")
-    print(f"  answer: {result.get('answer', '')[:100]}...")
+    print(f"\n✅ RAG Response:")
+    print(f"  Answer: {result.get('answer', '')[:100]}...")
     print("="*70 + "\n")
     
     return result
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+    """Clean shutdown of context store."""
+    print("\n🛑 Shutting down...")
+    context_store.stop()
+    print("✅ Context store stopped")

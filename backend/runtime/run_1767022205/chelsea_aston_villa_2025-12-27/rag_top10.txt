@@ -1,0 +1,16 @@
+RUN: run_1767022205
+GAME: chelsea_aston_villa_2025-12-27
+Current stream time: 2025-12-29 16:53:21
+Current game time: 74:00
+SCORE: 1-0
+----------------------------------------
+[STREAM 2025-12-29 16:46:13] [GAME 67:00] Highlight: ARRÊT DÉCISIF ! Sancho sert Maatsen ; depuis un angle très fermé, la frappe montante est repoussée des deux mains par Sanchez.
+[STREAM 2025-12-29 16:47:14] [GAME 68:00] CardYellow: Carton jaune : Chalobah averti pour un duel en retard sur Rogers.
+[STREAM 2025-12-29 16:48:15] [GAME 69:00] Substitution: Delap remplace le buteur Joao Pedro en attaque.
+[STREAM 2025-12-29 16:48:18] [GAME 69:00] Substitution: Gittens remplace Garnacho sur l'aile.
+[STREAM 2025-12-29 16:48:19] [GAME 69:00] Substitution: Cucurella cède sa place à Gusto.
+[STREAM 2025-12-29 16:49:19] [GAME 70:00] Highlight: ARRÊT ! Sanchez se détend sur sa gauche pour repousser une nouvelle frappe de Watkins, déviée et passée devant le but.
+[STREAM 2025-12-29 16:50:20] [GAME 71:00] CardYellow: Carton jaune : Caicedo tire Tielemans en arrière par le maillot.
+[STREAM 2025-12-29 16:50:20] [GAME 71:00] CardYellow: Carton jaune : Delap percute Onana avec un tacle en retard.
+[STREAM 2025-12-29 16:51:21] [GAME 72:00] Substitution: Palmer sort sous les applaudissements ; Estevao fait son retour.
+[STREAM 2025-12-29 16:53:21] [GAME 74:00] Commentary: Rogers enroule un coup franc de 23 mètres qui s'écrase sur le haut du filet.

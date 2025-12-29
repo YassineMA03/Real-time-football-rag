@@ -1,0 +1,16 @@
+RUN: run_1767023661
+GAME: nigeria_tunisia_2025-12-27
+Current stream time: 2025-12-29 17:16:34
+Current game time: 83:00
+SCORE: 3-1
+----------------------------------------
+[STREAM 2025-12-29 16:54:21] [GAME 75:00] SCORE: 3-1 (score at offset)
+[STREAM 2025-12-29 16:55:22] [GAME 77:00] Stoppage: Le jeu est interrompu: Stanley Nwabali (Nigeria) sur blessure.
+[STREAM 2025-12-29 16:55:22] [GAME 77:00] Restart: Le match reprend suite à une courte interruption.
+[STREAM 2025-12-29 16:56:23] [GAME 78:00] Handball: Main de Hazem Mastouri (Tunisie).
+[STREAM 2025-12-29 16:57:23] [GAME 79:00] Substitution: Remplacement, Nigeria. Moses Simon remplace Frank Onyeka.
+[STREAM 2025-12-29 16:57:23] [GAME 79:00] Substitution: Remplacement, Nigeria. Chidera Ejuke remplace Akor Adams.
+[STREAM 2025-12-29 16:58:24] [GAME 80:00] Corner: Corner, Tunisie. Corner concédé par Chidera Ejuke.
+[STREAM 2025-12-29 16:59:24] [GAME 81:00] ShotBlocked: Tir contré. Ferjani Sassi (Tunisie) de la tête de la gauche du coeur de la surface de réparation. Dernière passe de Hannibal Mejbri suite à un centre.
+[STREAM 2025-12-29 16:59:24] [GAME 81:00] Corner: Corner, Tunisie. Corner concédé par Victor Osimhen.
+[STREAM 2025-12-29 17:16:34] [GAME 83:00] Corner: Corner, Tunisie. Corner concédé par Semi Ajayi.

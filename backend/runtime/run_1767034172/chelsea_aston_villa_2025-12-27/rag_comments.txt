@@ -1,0 +1,12 @@
+RUN: run_1767034172
+GAME: chelsea_aston_villa_2025-12-27
+Current game time: 10:00
+SCORE: 0-0
+----------------------------------------
+LAST 10 COMMENTS:
+----------------------------------------
+[GAME 2:00] Highlight: PAS LOIN ! Après avoir parfaitement contrôlé une passe piquée de Caicedo et s'être débarrassé de Kamara, Palmer se crée l'espace pour frapper à l'entrée de la surface. Mais sa tentative fuit largement à côté du poteau gauche !
+[GAME 4:00] Commentary: Le bon début des locaux se poursuit, alors que Chelsea fait circuler le ballon avec intention dans la moitié de terrain d'Aston Villa. Lorsqu'ils finissent par perdre la possession, Rogers menace de filer en contre, mais James revient pour effectuer une intervention importante.
+[GAME 6:00] Commentary: Déjà, deux prétendants au poste de numéro 10 de l'Angleterre ont laissé entrevoir leur potentiel. Palmer s'est créé une belle occasion, et Rogers a démontré sa capacité à porter le ballon à pleine vitesse.
+[GAME 8:00] Commentary: Quand Kamara s'échappe de sa propre surface et tente de lancer une contre-attaque rapide, Caicedo tacle en glissade de manière un peu trop engagée. Il évite un avertissement précoce : l'arbitre se contente d'accorder un coup franc à Villa.
+[GAME 10:00] Commentary: Aston Villa ne sont pas favoris selon le prédicteur Opta. En l'état, Chelsea ont 42% de chances de s'imposer, contre 30% pour les Villans.

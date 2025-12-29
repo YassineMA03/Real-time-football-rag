@@ -1,0 +1,11 @@
+RUN: run_1767031959
+GAME: nigeria_tunisia_2025-12-27
+Current game time: 58:20
+SCORE: 2-0
+----------------------------------------
+LAST 10 EVENTS:
+----------------------------------------
+[GAME 44:00] EVENT: Card | Yellow Card | team=Nigeria | player=Victor Osimhen
+[GAME 44:00] EVENT: Goal | Normal Goal | team=Nigeria | player=V. Osimhen
+[GAME 50:00] EVENT: Goal | Normal Goal | team=Nigeria | player=W. Ndidi
+[GAME 56:00] EVENT: Card | Yellow Card | team=Nigeria | player=Semi Ajayi

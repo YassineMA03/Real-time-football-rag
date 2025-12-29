@@ -1,0 +1,10 @@
+RUN: run_022
+GAME: nigeria_tunisia_2025-12-27
+Current stream time: 2025-12-29 02:11:22
+Current game time: 3:00
+SCORE: 0-0
+----------------------------------------
+[STREAM 2025-12-29 02:09:22] [GAME 0:00] SCORE UPDATE 0-0 (score at offset)
+[STREAM 2025-12-29 02:09:22] [GAME 1:00] COMMENT PeriodStart: La première mi-temps commence.
+[STREAM 2025-12-29 02:11:22] [GAME 3:00] COMMENT Foul: Faute de Ali Abdi (Tunisie).
+[STREAM 2025-12-29 02:11:22] [GAME 3:00] COMMENT FreeKickAwarded: Bright Osayi-Samuel (Nigeria) se voit accorder un coup franc dans sa moitié de terrain.

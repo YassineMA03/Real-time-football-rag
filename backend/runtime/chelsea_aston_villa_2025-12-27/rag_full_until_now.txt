@@ -1,0 +1,8 @@
+RUN: run_022
+GAME: chelsea_aston_villa_2025-12-27
+Current stream time: 2025-12-29 02:11:22
+Current game time: 2:00
+SCORE: 0-0
+----------------------------------------
+[STREAM 2025-12-29 02:09:22] [GAME 0:00] SCORE UPDATE 0-0 (score at offset)
+[STREAM 2025-12-29 02:10:22] [GAME 2:00] COMMENT Highlight: PAS LOIN ! Après avoir parfaitement contrôlé une passe piquée de Caicedo et s'être débarrassé de Kamara, Palmer se crée l'espace pour frapper à l'entrée de la surface. Mais sa tentative fuit largement à côté du poteau gauche !

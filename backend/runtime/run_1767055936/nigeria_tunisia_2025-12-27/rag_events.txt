@@ -1,0 +1,17 @@
+RUN: run_1767055936
+GAME: nigeria_tunisia_2025-12-27
+Current game time: 89:00
+SCORE: 3-2
+----------------------------------------
+LAST 10 EVENTS:
+----------------------------------------
+[GAME 50:00] EVENT: Goal | Normal Goal | team=Nigeria | player=W. Ndidi
+[GAME 56:00] EVENT: Card | Yellow Card | team=Nigeria | player=Semi Ajayi
+[GAME 61:00] EVENT: subst | Substitution 1 | team=Tunisia | player=M. Ben Romdhane
+[GAME 67:00] EVENT: Goal | Normal Goal | team=Nigeria | player=A. Lookman
+[GAME 74:00] EVENT: Goal | Normal Goal | team=Tunisia | player=M. Talbi
+[GAME 75:00] EVENT: subst | Substitution 2 | team=Tunisia | player=E. Achouri
+[GAME 79:00] EVENT: subst | Substitution 1 | team=Nigeria | player=A. Adams
+[GAME 79:00] EVENT: subst | Substitution 2 | team=Nigeria | player=F. Onyeka
+[GAME 84:00] EVENT: Var | Penalty confirmed | team=Tunisia | player=Montassar Talbi
+[GAME 87:00] EVENT: Goal | Penalty | team=Tunisia | player=A. Abdi

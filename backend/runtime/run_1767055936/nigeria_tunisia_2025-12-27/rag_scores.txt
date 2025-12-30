@@ -1,0 +1,12 @@
+RUN: run_1767055936
+GAME: nigeria_tunisia_2025-12-27
+Current game time: 89:00
+SCORE: 3-2
+----------------------------------------
+LAST 10 GOALS/SCORE CHANGES:
+----------------------------------------
+[GAME 44:00] SCORE: 1-0 (Goal for Nigeria)
+[GAME 50:00] SCORE: 2-0 (Goal for Nigeria)
+[GAME 67:00] SCORE: 3-0 (Goal for Nigeria)
+[GAME 74:00] SCORE: 3-1 (Goal for Tunisia)
+[GAME 87:00] SCORE: 3-2 (Goal for Tunisia)

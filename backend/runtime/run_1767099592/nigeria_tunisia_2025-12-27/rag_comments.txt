@@ -1,0 +1,17 @@
+RUN: run_1767099592
+GAME: nigeria_tunisia_2025-12-27
+Current game time: 50:00
+SCORE: 1-0
+----------------------------------------
+LAST 10 COMMENTS:
+----------------------------------------
+[GAME 44' | 1st Half] Goal: But! Nigeria 1, Tunisie 0. Victor Osimhen (Nigeria) marque de la tête. Passe décisive de Ademola Lookman suite à un centre.
+[GAME 44' | 1st Half] CardYellow: Victor Osimhen (Nigeria) reçoit un carton jaune.
+[GAME 45' +1' | 1st Half] StoppageTime: Le quatrième arbitre vient d'indiquer 2 minutes de temps additionnel.
+[GAME 45' +3' | 1st Half] PeriodEnd: La première mi-temps se termine, Nigeria 1, Tunisie 0.
+[GAME 46' | 2nd Half] PeriodStart: La deuxième mi-temps commence Nigeria 1, Tunisie 0.
+[GAME 46' | 2nd Half] Foul: Faute de Mohamed Ben Romdhane (Tunisie).
+[GAME 46' | 2nd Half] FreeKickAwarded: Bright Osayi-Samuel (Nigeria) se voit accorder un coup franc sur l'aile droite.
+[GAME 47' | 2nd Half] Foul: Faute de Hannibal Mejbri (Tunisie).
+[GAME 47' | 2nd Half] FreeKickAwarded: Semi Ajayi (Nigeria) se voit accorder un coup franc sur l'aile droite.
+[GAME 50' | 2nd Half] Goal: But! Nigeria 2, Tunisie 0. Wilfred Ndidi (Nigeria) marque de la tête. Passe décisive de Ademola Lookman suite à un centre sur corner.

@@ -1,0 +1,8 @@
+RUN: run_1767098994
+GAME: nigeria_tunisia_2025-12-27
+Current game time: 48:00
+SCORE: 1-0
+----------------------------------------
+LAST 10 GOALS/SCORE CHANGES:
+----------------------------------------
+[GAME 44:00] SCORE: 1-0 | ⚽ V. Osimhen | 🅰️ A. Lookman | Type: Normal Goal

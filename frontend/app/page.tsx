@@ -16,6 +16,7 @@ type ChatMsg = {
   role: "user" | "assistant";
   text: string;
   ts: number;
+  mode?: "fast" | "deep_think";  // Track which mode was used
 };
 
 async function fetchAvailableGames(): Promise<GameMeta[]> {
@@ -45,11 +46,15 @@ async function fetchProgress(): Promise<any> {
   return await res.json();
 }
 
-async function chatForGame(params: { game_id: string; message: string }) {
+async function chatForGame(params: { game_id: string; message: string; deep_think: boolean }) {
   const res = await fetch("http://localhost:8000/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ game_id: params.game_id, message: params.message }),
+    body: JSON.stringify({ 
+      game_id: params.game_id, 
+      message: params.message,
+      deep_think: params.deep_think 
+    }),
   });
   if (!res.ok) throw new Error(await res.text());
   return await res.json();
@@ -119,6 +124,7 @@ export default function Page() {
   const [chatInput, setChatInput] = useState("");
   const [chatSending, setChatSending] = useState(false);
   const [chatByGame, setChatByGame] = useState<Record<string, ChatMsg[]>>({});
+  const [deepThinkMode, setDeepThinkMode] = useState(false);  // NEW: Deep think toggle
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   // Load games
@@ -184,7 +190,32 @@ export default function Page() {
     [selected]
   );
 
-  const canStart = selectedIds.length > 0 && !starting && !resetting;
+  const canStart = useMemo(() => {
+    if (selectedIds.length === 0 || starting || resetting) return false;
+    
+    // Check if all selected games have valid time inputs
+    for (const gid of selectedIds) {
+      const minute = parseInt2(minutes[gid]);
+      const extra = parseInt2(extras[gid]);
+      const half = selectedHalf[gid] || 1;
+      
+      // Check minute constraints
+      const minuteMin = half === 1 ? 0 : 45;
+      const minuteMax = half === 1 ? 45 : 90;
+      
+      if (minute < minuteMin || minute > minuteMax) {
+        return false; // Invalid minute
+      }
+      
+      // Check extra constraints
+      const extraAllowed = (half === 1 && minute === 45) || (half === 2 && minute === 90);
+      if (!extraAllowed && extra > 0) {
+        return false; // Extra not allowed at this minute
+      }
+    }
+    
+    return true;
+  }, [selectedIds, starting, resetting, minutes, extras, selectedHalf]);
 
   async function onStart() {
     setErr(null);
@@ -257,12 +288,25 @@ export default function Page() {
     }));
 
     try {
-      const resp = await chatForGame({ game_id: activeChatGameId, message: q });
+      const resp = await chatForGame({ 
+        game_id: activeChatGameId, 
+        message: q,
+        deep_think: deepThinkMode  // Pass the deep think mode
+      });
+      
+      // Store the mode that was used
+      const usedMode = deepThinkMode ? "deep_think" : "fast";
+      
       setChatByGame((prev) => ({
         ...prev,
         [activeChatGameId]: [
           ...(prev[activeChatGameId] ?? []),
-          { role: "assistant", text: resp.answer ?? "No response", ts: Date.now() },
+          { 
+            role: "assistant", 
+            text: resp.answer ?? "No response", 
+            ts: Date.now(),
+            mode: usedMode  // Store which mode was used
+          },
         ],
       }));
     } catch (e: any) {
@@ -354,12 +398,18 @@ export default function Page() {
                 const extra = parseInt2(extras[g.game_id]);
                 const half = selectedHalf[g.game_id] || 1;
                 
+                // Strict minute constraints based on half
+                // 1st half: 0-45 only
+                // 2nd half: 45-90 only
+                const minuteMin = half === 1 ? 0 : 45;
+                const minuteMax = half === 1 ? 45 : 90;
+                
                 // Only allow extra time at exactly 45 (1st half) or 90 (2nd half)
                 const extraAllowed = (half === 1 && minute === 45) || (half === 2 && minute === 90);
                 const maxExtra = extraAllowed ? calculateMaxExtra(g.duration_sec || 5400, half) : 0;
                 
-                // Validation based on half
-                const minuteInvalid = half === 1 ? minute > 45 : (minute < 45 || minute > 90);
+                // Validation: Enforce strict minute ranges
+                const minuteInvalid = minute < minuteMin || minute > minuteMax;
                 const extraInvalid = extra > maxExtra || (!extraAllowed && extra > 0);
                 
                 // Display the actual match time (minute + extra)
@@ -391,7 +441,18 @@ export default function Page() {
                             </div>
                             <div style={{ display: "flex", gap: 8 }}>
                               <button
-                                onClick={() => setSelectedHalf((p) => ({ ...p, [g.game_id]: 1 }))}
+                                onClick={() => {
+                                  setSelectedHalf((p) => ({ ...p, [g.game_id]: 1 }));
+                                  // Clear minute if it's outside 1st half range (0-45)
+                                  const currentMinute = parseInt2(minutes[g.game_id]);
+                                  if (currentMinute > 45) {
+                                    setMinutes((p) => ({ ...p, [g.game_id]: "" }));
+                                  }
+                                  // Clear extra if not at 45
+                                  if (currentMinute !== 45) {
+                                    setExtras((p) => ({ ...p, [g.game_id]: "" }));
+                                  }
+                                }}
                                 style={{
                                   flex: 1,
                                   padding: "8px 12px",
@@ -407,7 +468,18 @@ export default function Page() {
                                 ⚽ 1st Half (0-{fmtMmSs(Math.min(2700, g.duration_sec || 5400))})
                               </button>
                               <button
-                                onClick={() => setSelectedHalf((p) => ({ ...p, [g.game_id]: 2 }))}
+                                onClick={() => {
+                                  setSelectedHalf((p) => ({ ...p, [g.game_id]: 2 }));
+                                  // Clear minute if it's outside 2nd half range (45-90)
+                                  const currentMinute = parseInt2(minutes[g.game_id]);
+                                  if (currentMinute < 45) {
+                                    setMinutes((p) => ({ ...p, [g.game_id]: "" }));
+                                  }
+                                  // Clear extra if not at 90
+                                  if (currentMinute !== 90) {
+                                    setExtras((p) => ({ ...p, [g.game_id]: "" }));
+                                  }
+                                }}
                                 style={{
                                   flex: 1,
                                   padding: "8px 12px",
@@ -456,7 +528,7 @@ export default function Page() {
                                 />
                                 {minuteInvalid && (
                                   <div style={{ fontSize: 11, color: "#dc2626", marginTop: 2 }}>
-                                    {half === 1 ? "Max: 45 min" : "Range: 45-90 min"}
+                                    {half === 1 ? "Must be 0-45" : "Must be 45-90"}
                                   </div>
                                 )}
                               </div>
@@ -551,9 +623,25 @@ export default function Page() {
                   streamingGames.map((g) => {
                     const p = progress?.progress?.[g.game_id];
                     const status = p?.status ?? "—";
-                    const curSec =
-                      (typeof p?.known_time_sec === "number" ? p.known_time_sec : null) ??
-                      (typeof p?.current_time_sec === "number" ? p.current_time_sec : null);
+                    
+                    // Get minute and extra from progress
+                    const minute = p?.known_minute ?? 0;
+                    const extra = p?.known_extra ?? 0;
+                    
+                    // Determine half correctly:
+                    // - 1st Half: 0-45 (including 45+X)
+                    // - 2nd Half: 46-90 (including 90+X)
+                    const half = minute <= 45 ? "1st Half" : "2nd Half";
+                    
+                    // Format time display
+                    let timeDisplay = "—";
+                    if (minute !== undefined) {
+                      if (extra > 0) {
+                        timeDisplay = `${minute}' +${extra}' (${half})`;
+                      } else {
+                        timeDisplay = `${minute}' (${half})`;
+                      }
+                    }
 
                     const isActive = activeChatGameId === g.game_id;
 
@@ -574,7 +662,7 @@ export default function Page() {
                           {g.team_home} <span style={{ color: "#71717a" }}>vs</span> {g.team_away}
                         </div>
                         <div style={{ fontSize: 13, color: "#52525b", marginTop: 2 }}>
-                          {status} • {curSec == null ? "—" : fmtMmSs(curSec)}
+                          {status} • {timeDisplay}
                         </div>
                         <div style={{ fontSize: 12, color: "#a1a1aa", marginTop: 6, fontFamily: "monospace" }}>
                           {g.game_id}
@@ -588,11 +676,70 @@ export default function Page() {
 
             {/* chat */}
             <div style={{ border: "1px solid #e5e7eb", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 360 }}>
-              <div style={{ borderBottom: "1px solid #e5e7eb", padding: 10, fontWeight: 700, fontSize: 13, color: "#000" }}>
-                {activeChatGameId ? `Chat • ${activeChatGameId}` : "Select a streaming game"}
+              {/* Header with Deep Think toggle */}
+              <div style={{ borderBottom: "1px solid #e5e7eb", padding: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: "#000" }}>
+                  {activeChatGameId ? `Chat • ${activeChatGameId}` : "Select a streaming game"}
+                </div>
+                
+                {activeChatGameId && (
+                  <button
+                    onClick={() => setDeepThinkMode(!deepThinkMode)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "6px 12px",
+                      borderRadius: 8,
+                      border: deepThinkMode ? "2px solid #8b5cf6" : "1px solid #e5e7eb",
+                      background: deepThinkMode ? "#f5f3ff" : "white",
+                      color: deepThinkMode ? "#6d28d9" : "#52525b",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <span style={{ fontSize: 14 }}>{deepThinkMode ? "🧠" : "⚡"}</span>
+                    <span>{deepThinkMode ? "Deep Think" : "Fast Mode"}</span>
+                  </button>
+                )}
               </div>
 
-              <div style={{ flex: 1, overflow: "auto", padding: 10, background: "#fafafa", display: "flex", flexDirection: "column", gap: 8 }}>
+              <div 
+                style={{ 
+                  flex: 1, 
+                  overflow: "auto",  // Make scrollable
+                  padding: 10, 
+                  background: "#fafafa", 
+                  display: "flex", 
+                  flexDirection: "column", 
+                  gap: 8,
+                  maxHeight: "500px"  // Set max height for scrolling
+                }}
+              >
+                {/* Mode explanation */}
+                {activeChatGameId && (
+                  <div style={{
+                    padding: "8px 10px",
+                    background: deepThinkMode ? "#faf5ff" : "#f0fdf4",
+                    border: deepThinkMode ? "1px solid #e9d5ff" : "1px solid #bbf7d0",
+                    borderRadius: 10,
+                    fontSize: 11,
+                    color: "#000",
+                  }}>
+                    {deepThinkMode ? (
+                      <>
+                        <strong>🧠 Deep Think Mode:</strong> Searches ALL match history with semantic similarity. Best for analysis and "big picture" questions.
+                      </>
+                    ) : (
+                      <>
+                        <strong>⚡ Fast Mode:</strong> Uses recent context only. Best for "What just happened?" questions.
+                      </>
+                    )}
+                  </div>
+                )}
+                
                 {!activeChatGameId ? (
                   <div style={{ fontSize: 13, color: "#000" }}>No game selected.</div>
                 ) : activeChatMessages.length === 0 ? (
@@ -610,9 +757,31 @@ export default function Page() {
                         borderRadius: 14,
                         maxWidth: "92%",
                         fontSize: 13,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
                       }}
                     >
-                      {m.text}
+                      {/* Message text */}
+                      <div>{m.text}</div>
+                      
+                      {/* Mode badge for assistant messages */}
+                      {m.role === "assistant" && m.mode && (
+                        <div style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          alignSelf: "flex-start",
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                          fontSize: 10,
+                          fontWeight: 600,
+                          background: m.mode === "deep_think" ? "#f5f3ff" : "#f0fdf4",
+                          color: m.mode === "deep_think" ? "#7c3aed" : "#16a34a",
+                          border: m.mode === "deep_think" ? "1px solid #e9d5ff" : "1px solid #bbf7d0",
+                        }}>
+                          {m.mode === "deep_think" ? "🧠 Deep Think" : "⚡ Fast"}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}

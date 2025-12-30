@@ -1,0 +1,17 @@
+RUN: run_1767097774
+GAME: nigeria_tunisia_2025-12-27
+Current game time: 59:00
+SCORE: 1-0
+----------------------------------------
+LAST 10 COMMENTS:
+----------------------------------------
+[GAME 51:00] FreeKickAwarded: Hannibal Mejbri (Tunisie) se voit accorder un coup franc sur l'aile gauche.
+[GAME 51:00] Foul: Faute de Calvin Bassey (Nigeria).
+[GAME 53:00] FreeKickAwarded: Elias Achouri (Tunisie) se voit accorder un coup franc dans sa moitié de terrain.
+[GAME 53:00] Foul: Faute de Ademola Lookman (Nigeria).
+[GAME 54:00] ShotBlocked: Tir contré. Ademola Lookman (Nigeria) du pied droit de l'extérieur de la surface de réparation. Dernière passe de Victor Osimhen.
+[GAME 55:00] FreeKickAwarded: Hannibal Mejbri (Tunisie) se voit accorder un coup franc dans sa moitié de terrain.
+[GAME 55:00] Foul: Faute de Semi Ajayi (Nigeria).
+[GAME 56:00] CardYellow: Semi Ajayi (Nigeria) reçoit un carton jaune pour jeu dangereux.
+[GAME 57:00] Stoppage: Le jeu est interrompu: Mohamed Ben Romdhane (Tunisie) sur blessure.
+[GAME 59:00] Restart: Le match reprend suite à une courte interruption.

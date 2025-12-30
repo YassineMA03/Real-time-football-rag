@@ -1,0 +1,17 @@
+RUN: run_1767057893
+GAME: chelsea_aston_villa_2025-12-27
+Current game time: 78:00
+SCORE: 1-0
+----------------------------------------
+LAST 10 COMMENTS:
+----------------------------------------
+[GAME 69:00] Substitution: Delap remplace le buteur Joao Pedro en attaque.
+[GAME 69:00] Substitution: Gittens remplace Garnacho sur l'aile.
+[GAME 69:00] Substitution: Cucurella cède sa place à Gusto.
+[GAME 70:00] Highlight: ARRÊT ! Sanchez se détend sur sa gauche pour repousser une nouvelle frappe de Watkins, déviée et passée devant le but.
+[GAME 71:00] CardYellow: Carton jaune : Caicedo tire Tielemans en arrière par le maillot.
+[GAME 71:00] CardYellow: Carton jaune : Delap percute Onana avec un tacle en retard.
+[GAME 72:00] Substitution: Palmer sort sous les applaudissements ; Estevao fait son retour.
+[GAME 74:00] Commentary: Rogers enroule un coup franc de 23 mètres qui s'écrase sur le haut du filet.
+[GAME 76:00] Commentary: Chelsea obtient un bon coup franc après une faute près de la surface de Villa. James frappe directement dans le mur.
+[GAME 78:00] CardYellow: Carton jaune : Kamara averti pour un duel en retard au milieu. Il manquera le match contre Arsenal.

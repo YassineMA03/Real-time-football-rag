@@ -60,6 +60,7 @@ class RagEngine:
         minute_gte: Optional[int] = None,
         minute_lte: Optional[int] = None,
         run_id: Optional[str] = None,
+        deep_think: bool = False,
     ) -> List[RetrievedItem]:
         try:
             qvec = self.embedder.encode(user_query).tolist()
@@ -73,18 +74,22 @@ class RagEngine:
             if run_id and run_id != "None":
                 must.append(FieldCondition(key="run_id", match=MatchValue(value=run_id)))
 
-            if minute_gte is not None or minute_lte is not None:
-                must.append(
-                    FieldCondition(
-                        key="minute",
-                        range=Range(
-                            gte=minute_gte if minute_gte is not None else None,
-                            lte=minute_lte if minute_lte is not None else None,
-                        ),
+            # In deep_think mode, we DON'T filter by minute - we search ALL history
+            if not deep_think:
+                if minute_gte is not None or minute_lte is not None:
+                    must.append(
+                        FieldCondition(
+                            key="minute",
+                            range=Range(
+                                gte=minute_gte if minute_gte is not None else None,
+                                lte=minute_lte if minute_lte is not None else None,
+                            ),
+                        )
                     )
-                )
 
-            print(f"🔍 RAG Query - match_id: {match_id}, run_id: {run_id}, minute range: {minute_gte}-{minute_lte}")
+            mode_str = "🧠 DEEP THINK" if deep_think else "⚡ FAST"
+            minute_range = "ALL" if deep_think else f"{minute_gte}-{minute_lte}"
+            print(f"{mode_str} RAG Query - match_id: {match_id}, run_id: {run_id}, minute range: {minute_range}")
 
             # Try different methods depending on qdrant-client version
             try:
@@ -131,7 +136,7 @@ class RagEngine:
             traceback.print_exc()
             return []
 
-    def build_prompt(self, user_query: str, contexts: List[RetrievedItem]) -> str:
+    def build_prompt(self, user_query: str, contexts: List[RetrievedItem], deep_think: bool = False) -> str:
         ctx_lines: List[str] = []
         for c in contexts:
             meta = []
@@ -142,12 +147,26 @@ class RagEngine:
             meta_s = (" " + " ".join(meta)) if meta else ""
             ctx_lines.append(f"[{c.source.upper()} {c.minute:02d}m]{meta_s} {c.text}")
 
+        if deep_think:
+            system_msg = (
+                "SYSTEM:\n"
+                "You are a football match analyst with access to ALL match data.\n"
+                "The context below contains the MOST RELEVANT information from the entire match history.\n"
+                "These moments were selected by semantic similarity to the question.\n"
+                "Analyze the context deeply and provide a comprehensive answer.\n"
+                "If you need to reference specific moments, mention the minute.\n\n"
+            )
+        else:
+            system_msg = (
+                "SYSTEM:\n"
+                "You are a live football match assistant.\n"
+                "Use ONLY the context to answer.\n"
+                "If the answer is not in context, say you don't know.\n\n"
+            )
+
         return (
-            "SYSTEM:\n"
-            "You are a live football match assistant.\n"
-            "Use ONLY the context to answer.\n"
-            "If the answer is not in context, say you don't know.\n\n"
-            "CONTEXT:\n"
+            system_msg
+            + "CONTEXT:\n"
             + "\n".join(ctx_lines)
             + "\n\nQUESTION:\n"
             + user_query
@@ -174,13 +193,33 @@ class RagEngine:
         minute_window: Optional[int] = None,
         current_minute: Optional[int] = None,
         run_id: Optional[str] = None,
+        deep_think: bool = False,
     ) -> Dict[str, Any]:
+        """
+        Answer a question using RAG.
+        
+        Args:
+            question: User's question
+            match_id: Game ID
+            top_k: Number of results (ignored in deep_think mode, uses 20)
+            minute_window: Window size for time filtering (ignored in deep_think)
+            current_minute: Current minute (ignored in deep_think)
+            run_id: Optional run ID
+            deep_think: If True, uses deep thinking mode with full vector search
+        """
         try:
-            minute_gte = None
-            minute_lte = None
-            if minute_window is not None and current_minute is not None:
-                minute_gte = max(0, int(current_minute) - int(minute_window))
-                minute_lte = int(current_minute)
+            # In deep_think mode, ignore minute window and get more results
+            if deep_think:
+                minute_gte = None
+                minute_lte = None
+                top_k = 20  # Get more context for deep thinking
+                print("🧠 DEEP THINK MODE: Searching ALL historical data with semantic similarity")
+            else:
+                minute_gte = None
+                minute_lte = None
+                if minute_window is not None and current_minute is not None:
+                    minute_gte = max(0, int(current_minute) - int(minute_window))
+                    minute_lte = int(current_minute)
 
             ctx = self.retrieve(
                 user_query=question,
@@ -189,6 +228,7 @@ class RagEngine:
                 minute_gte=minute_gte,
                 minute_lte=minute_lte,
                 run_id=run_id,
+                deep_think=deep_think,
             )
             
             if not ctx:
@@ -197,12 +237,13 @@ class RagEngine:
                     "contexts": [],
                 }
             
-            prompt = self.build_prompt(question, ctx)
+            prompt = self.build_prompt(question, ctx, deep_think=deep_think)
             answer = self.generate_answer(prompt)
 
             return {
                 "answer": answer,
                 "contexts": [c.__dict__ for c in ctx],
+                "mode": "deep_think" if deep_think else "fast",
             }
         except Exception as e:
             print(f"Error in answer: {e}")

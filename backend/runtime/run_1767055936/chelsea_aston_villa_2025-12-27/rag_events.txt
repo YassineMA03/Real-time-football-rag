@@ -1,0 +1,17 @@
+RUN: run_1767055936
+GAME: chelsea_aston_villa_2025-12-27
+Current game time: 80:00
+SCORE: 1-1
+----------------------------------------
+LAST 10 EVENTS:
+----------------------------------------
+[GAME 59:00] EVENT: subst | Substitution 3 | team=Aston Villa | player=D. Malen
+[GAME 63:00] EVENT: Goal | Normal Goal | team=Aston Villa | player=O. Watkins
+[GAME 68:00] EVENT: Card | Yellow Card | team=Chelsea | player=Trevoh Chalobah
+[GAME 69:00] EVENT: subst | Substitution 1 | team=Chelsea | player=M. Cucurella
+[GAME 69:00] EVENT: subst | Substitution 2 | team=Chelsea | player=A. Garnacho
+[GAME 69:00] EVENT: subst | Substitution 3 | team=Chelsea | player=Joao Pedro
+[GAME 71:00] EVENT: Card | Yellow Card | team=Chelsea | player=Liam Delap
+[GAME 71:00] EVENT: Card | Yellow Card | team=Chelsea | player=Moisés Caicedo
+[GAME 72:00] EVENT: subst | Substitution 4 | team=Chelsea | player=C. Palmer
+[GAME 78:00] EVENT: Card | Yellow Card | team=Aston Villa | player=Boubacar Kamara

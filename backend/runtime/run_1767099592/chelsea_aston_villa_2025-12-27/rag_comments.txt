@@ -1,0 +1,17 @@
+RUN: run_1767099592
+GAME: chelsea_aston_villa_2025-12-27
+Current game time: 48:00
+SCORE: 1-0
+----------------------------------------
+LAST 10 COMMENTS:
+----------------------------------------
+[GAME 34' | 1st Half] Highlight: À CÔTÉ ! James frappe à l'entrée de la surface après une combinaison Garnacho–Cucurella–Neto, mais c'est largement à côté du poteau gauche.
+[GAME 37' | 1st Half] Goal: BUT !!! CHELSEA MÈNE 1-0 ! Sur corner, James dépose le ballon dans une surface bondée, Martinez ne parvient pas à repousser et le ballon touche Joao Pedro avant de finir au fond.
+[GAME 37' | 1st Half] Assist: Passe décisive : James enroule un corner dangereux (Olimpico refusé par une légère déviation de Joao Pedro).
+[GAME 39' | 1st Half] Commentary: Chelsea mérite pleinement son avantage, mais Villa ne paniquera pas : ils ont renversé la situation pour s'imposer à cinq reprises sur les huit matchs où ils ont été menés cette saison.
+[GAME 41' | 1st Half] Commentary: Palmer perd le ballon, puis frappe de 18 mètres : Martinez repousse assez facilement. Chelsea peut estimer qu'ils devraient mener plus largement.
+[GAME 43' | 1st Half] Commentary: Stat : après ce corner, seul Bruno Fernandes (6) a délivré plus de passes décisives sur coups de pied arrêtés cette saison que James (4).
+[GAME 45' +3' | 1st Half] PeriodEnd: MI-TEMPS : CHELSEA 1-0 ASTON VILLA.
+[GAME 46' | 2nd Half] PeriodStart: Chelsea donne le coup d'envoi, c'est reparti à Stamford Bridge !
+[GAME 46' | 2nd Half] Commentary: Chelsea a livré une première période solide ; le but vient d'un coup de pied arrêté. Villa a été en dessous de son niveau et n'a pas ouvert son compteur.
+[GAME 47' | 2nd Half] VAR: VÉRIFICATION DE PENALTY ! Le ballon heurte le bras de Maatsen et file en corner. Malgré les protestations, une rapide vérification VAR décide que le jeu doit continuer.

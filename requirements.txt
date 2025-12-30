@@ -41,6 +41,7 @@ protobuf==6.33.2
 pydantic==2.12.5
 pydantic_core==2.41.5
 python-dateutil==2.9.0.post0
+python-dotenv==1.2.1
 python-multipart==0.0.21
 PyYAML==6.0.3
 qdrant-client==1.16.2

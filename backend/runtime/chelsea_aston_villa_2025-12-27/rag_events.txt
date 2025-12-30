@@ -1,0 +1,15 @@
+RUN: run_1767135359
+GAME: chelsea_aston_villa_2025-12-27
+Current game time: 94:00
+SCORE: 1-2
+----------------------------------------
+[GAME 69' | 2nd Half] EVENT subst (Substitution 2) - Chelsea - A. Garnacho : Substitution 2
+[GAME 69' | 2nd Half] EVENT subst (Substitution 3) - Chelsea - Joao Pedro : Substitution 3
+[GAME 71' | 2nd Half] EVENT Card (Yellow Card) - Chelsea - Liam Delap : Foul
+[GAME 71' | 2nd Half] EVENT Card (Yellow Card) - Chelsea - Moisés Caicedo : Foul
+[GAME 72' | 2nd Half] EVENT subst (Substitution 4) - Chelsea - C. Palmer : Substitution 4
+[GAME 78' | 2nd Half] EVENT Card (Yellow Card) - Aston Villa - Boubacar Kamara : Foul
+[GAME 83' | 2nd Half] EVENT subst (Substitution 4) - Aston Villa - I. Maatsen : Substitution 4
+[GAME 83' | 2nd Half] EVENT subst (Substitution 5) - Aston Villa - B. Kamara : Substitution 5
+[GAME 84' | 2nd Half] EVENT Goal (Normal Goal) - Aston Villa - O. Watkins : Normal Goal
+[GAME 90' +4' | 2nd Half] EVENT Card (Yellow Card) - Chelsea - Enzo Fernández : Argument

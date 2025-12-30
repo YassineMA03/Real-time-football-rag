@@ -6,19 +6,15 @@ import time
 import threading
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from collections import deque
 
 from kafka import KafkaConsumer
 
 
 # -------------------------
-# Small helpers
+# Formatting helpers
 # -------------------------
-
-def now_stream_time_str() -> str:
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-
 
 def fmt_mmss(sec: int) -> str:
     m = sec // 60
@@ -26,243 +22,93 @@ def fmt_mmss(sec: int) -> str:
     return f"{m}:{s:02d}"
 
 
-def load_json_or_jsonl(game_folder: Path, base: str) -> List[dict]:
-    """
-    Supports:
-      - <base>.json as a JSON list
-      - <base>.json as API-style wrapper dict containing "response": [...]
-      - <base>.jsonl as JSON Lines (one object per line)
-    """
-    p_json = game_folder / f"{base}.json"
-    p_jsonl = game_folder / f"{base}.jsonl"
-
-    if p_json.exists():
-        obj = json.loads(p_json.read_text(encoding="utf-8"))
-
-        # Case 1: already a list
-        if isinstance(obj, list):
-            return obj
-
-        # Case 2: wrapper dict with "response" list (API-Football, etc.)
-        if isinstance(obj, dict):
-            resp = obj.get("response")
-            if isinstance(resp, list):
-                return resp
-
-        raise ValueError(f"{p_json.name} must be a list OR a dict with a 'response' list")
-
-    if p_jsonl.exists():
-        out = []
-        for line in p_jsonl.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            out.append(json.loads(line))
-        return out
-
-    return []
+def half_from_minute(minute: Optional[int]) -> str:
+    if minute is None:
+        return "—"
+    return "1st Half" if minute <= 45 else "2nd Half"
 
 
-
-def comment_time_sec(c: dict) -> int:
-    minute = int(c.get("minute", 0) or 0)
-    extra = int(c.get("extra", 0) or 0)
-    second = int(c.get("second", 0) or 0)
-    return (minute + extra) * 60 + second
-
-
-def event_time_sec(e: dict) -> Optional[int]:
-    # API-Football fixtures/events schema
-    t = e.get("time")
-    if isinstance(t, dict) and "elapsed" in t:
-        minute = int(t.get("elapsed", 0) or 0)
-        extra = int(t.get("extra", 0) or 0)
-        second = int(t.get("second", 0) or 0)
-        return (minute + extra) * 60 + second
-
-    # fallback
-    if "event_time_sec" in e and isinstance(e["event_time_sec"], (int, float)):
-        return int(e["event_time_sec"])
-
-    if "minute" in e:
-        minute = int(e.get("minute", 0) or 0)
-        extra = int(e.get("extra", 0) or 0)
-        second = int(e.get("second", 0) or 0)
-        return (minute + extra) * 60 + second
-
-    return None
+def time_str(minute: Optional[int], extra: Optional[int], tsec: Optional[int]) -> str:
+    if minute is None:
+        return fmt_mmss(int(tsec or 0))
+    extra = int(extra or 0)
+    h = half_from_minute(minute)
+    if extra > 0:
+        return f"{minute}' +{extra}' | {h}"
+    return f"{minute}' | {h}"
 
 
-# -------------------------
-# NEW: Tuple-based time extractors (for accurate comparison)
-# -------------------------
-
-def comment_time_tuple(c: dict) -> Tuple[int, int]:
-    """Extract (minute, extra) tuple from comment."""
-    minute = int(c.get("minute", 0) or 0)
-    extra = int(c.get("extra", 0) or 0)
-    return (minute, extra)
-
-
-def event_time_tuple(e: dict) -> Tuple[int, int]:
-    """Extract (minute, extra) tuple from event."""
-    t = e.get("time")
-    if isinstance(t, dict) and "elapsed" in t:
-        minute = int(t.get("elapsed", 0) or 0)
-        extra = int(t.get("extra", 0) or 0)
-        return (minute, extra)
-    
-    if "minute" in e:
-        minute = int(e.get("minute", 0) or 0)
-        extra = int(e.get("extra", 0) or 0)
-        return (minute, extra)
-    
-    if "event_time_sec" in e:
-        tsec = int(e["event_time_sec"])
-        minute = tsec // 60
-        return (minute, 0)
-    
-    return (0, 0)
+def comment_line(item: dict) -> str:
+    tsec = int(item.get("event_time_sec", 0) or 0)
+    minute = item.get("minute")
+    extra = item.get("extra")
+    etype = item.get("type") or "Comment"
+    text = (item.get("text") or "").strip()
+    ts = time_str(minute, extra, tsec)
+    return f"[GAME {ts}] COMMENT {etype}: {text}\n"
 
 
-GOAL_DETAILS_OK = {"Normal Goal", "Penalty", "Own Goal"}
+def event_line(item: dict) -> str:
+    tsec = int(item.get("event_time_sec", 0) or 0)
+    minute = item.get("minute")
+    extra = item.get("extra")
+    etype = item.get("type") or "Event"
+    detail = item.get("detail")
+    ts = time_str(minute, extra, tsec)
 
+    # Try to extract a readable description from data
+    data = item.get("data")
+    desc = None
+    if isinstance(data, dict):
+        for k in ["comments", "comment", "description", "text", "detail"]:
+            if isinstance(data.get(k), str) and data.get(k).strip():
+                desc = data[k].strip()
+                break
 
-def is_goal_event(e: dict) -> bool:
-    etype = e.get("type")
-    if isinstance(etype, str) and etype.lower() == "goal":
-        detail = e.get("detail")
-        if detail is None:
-            return True
-        if isinstance(detail, str):
-            return detail.strip() in GOAL_DETAILS_OK
-        return True
-    return False
-
-
-def extract_team_name(e: dict) -> Optional[str]:
-    team = e.get("team")
-    if isinstance(team, dict):
-        name = team.get("name")
-        if isinstance(name, str) and name.strip():
-            return name.strip()
-    return None
-
-
-def apply_goal(score_home: int, score_away: int, scoring_team: str, home: str, away: str, detail: Optional[str]) -> Tuple[int, int, str]:
-    d = (detail or "").strip()
-    if d == "Own Goal":
-        if scoring_team == home:
-            return score_home, score_away + 1, f"Own Goal by {home}"
-        if scoring_team == away:
-            return score_home + 1, score_away, f"Own Goal by {away}"
-        return score_home, score_away, "Own Goal (unknown team)"
-
-    if scoring_team == home:
-        return score_home + 1, score_away, f"Goal for {home}"
-    if scoring_team == away:
-        return score_home, score_away + 1, f"Goal for {away}"
-    return score_home, score_away, "Goal (unknown team)"
-
-
-def event_summary(e: dict) -> str:
-    etype = e.get("type") or e.get("event") or e.get("name") or "Event"
-    detail = e.get("detail")
-    team = extract_team_name(e)
-    player = None
-    if isinstance(e.get("player"), dict):
-        player = e["player"].get("name")
-
-    parts = [str(etype)]
-    if isinstance(detail, str) and detail.strip():
-        parts.append(detail.strip())
-    if isinstance(team, str):
-        parts.append(f"team={team}")
-    if isinstance(player, str) and player.strip():
-        parts.append(f"player={player.strip()}")
-    return " | ".join(parts)
-
-
-def comment_line(tsec: int, text: str, etype: str = "COMMENT", minute: Optional[int] = None, extra: Optional[int] = None) -> str:
-    """
-    Format a comment line with time, half, minute, and extra time.
-    
-    Example:
-        [GAME 45' +2' | 1st Half] COMMENT: Ball possession
-    """
-    if minute is not None and extra is not None:
-        half = "1st Half" if minute <= 45 else "2nd Half"
-        if extra > 0:
-            time_str = f"{minute}' +{extra}' | {half}"
-        else:
-            time_str = f"{minute}' | {half}"
+        # add player/team if exists
+        player = data.get("player")
+        team = data.get("team")
+        player_name = player.get("name") if isinstance(player, dict) else None
+        team_name = team.get("name") if isinstance(team, dict) else None
     else:
-        # Fallback to seconds
-        time_str = fmt_mmss(tsec)
-    
-    return f"[GAME {time_str}] {etype}: {text}\n"
+        player_name = None
+        team_name = None
+
+    parts = [f"[GAME {ts}] EVENT {etype}"]
+    if detail:
+        parts.append(f"({detail})")
+    if team_name:
+        parts.append(f"- {team_name}")
+    if player_name:
+        parts.append(f"- {player_name}")
+    if desc:
+        parts.append(f": {desc}")
+
+    return " ".join(parts).strip() + "\n"
 
 
-def event_line(tsec: int, summary: str, minute: Optional[int] = None, extra: Optional[int] = None) -> str:
-    """
-    Format an event line with time, half, minute, and extra time.
-    
-    Example:
-        [GAME 45' +2' | 1st Half] EVENT: Yellow Card | team=Nigeria
-    """
-    if minute is not None and extra is not None:
-        half = "1st Half" if minute <= 45 else "2nd Half"
-        if extra > 0:
-            time_str = f"{minute}' +{extra}' | {half}"
-        else:
-            time_str = f"{minute}' | {half}"
-    else:
-        # Fallback to seconds
-        time_str = fmt_mmss(tsec)
-    
-    return f"[GAME {time_str}] EVENT: {summary}\n"
+def score_line(item: dict) -> str:
+    tsec = int(item.get("tsec", 0) or 0)
+    minute = item.get("minute")
+    extra = item.get("extra")
+    score_str = item.get("score_str") or f"{item.get('score_home', 0)}-{item.get('score_away', 0)}"
+    ts = time_str(minute, extra, tsec)
 
+    team = item.get("team")
+    scorer = item.get("scorer")
+    assist = item.get("assist")
+    goal_type = item.get("goal_type")
 
-def score_line(tsec: int, score_str: str, why: str, scorer: Optional[str] = None, 
-               assist: Optional[str] = None, goal_type: Optional[str] = None,
-               minute: Optional[int] = None, extra: Optional[int] = None) -> str:
-    """
-    Format a score line with detailed goal information including half.
-    
-    Examples:
-        [GAME 12' | 1st Half] SCORE: 1-0 | ⚽ Moses Simon | Type: Normal Goal
-        [GAME 45' +2' | 1st Half] SCORE: 2-0 | ⚽ Victor Osimhen | 🅰️ Moses Simon
-        [GAME 68' | 2nd Half] SCORE: 2-1 | ⚽ Youssef Msakni | Type: Penalty
-    """
-    if minute is not None and extra is not None:
-        half = "1st Half" if minute <= 45 else "2nd Half"
-        if extra > 0:
-            time_str = f"{minute}' +{extra}' | {half}"
-        else:
-            time_str = f"{minute}' | {half}"
-    else:
-        # Fallback to seconds
-        time_str = fmt_mmss(tsec)
-    
-    parts = [f"[GAME {time_str}] SCORE: {score_str}"]
-    
-    # Add scorer
+    parts = [f"[GAME {ts}] SCORE: {score_str}"]
+    if team:
+        parts.append(f"| Team: {team}")
     if scorer:
-        parts.append(f"⚽ {scorer}")
-    
-    # Add assist
+        parts.append(f"| ⚽ {scorer}")
     if assist:
-        parts.append(f"🅰️ {assist}")
-    
-    # Add goal type
+        parts.append(f"| 🅰️ {assist}")
     if goal_type:
-        parts.append(f"Type: {goal_type}")
-    
-    # Add reason (fallback if no detailed info)
-    if not scorer and why:
-        parts.append(f"({why})")
-    
-    return " | ".join(parts) + "\n"
+        parts.append(f"| Type: {goal_type}")
+    return " ".join(parts).strip() + "\n"
 
 
 def header_text(run_id: str, game_id: str, known_tsec: int, score_str: str) -> str:
@@ -276,27 +122,87 @@ def header_text(run_id: str, game_id: str, known_tsec: int, score_str: str) -> s
 
 
 # -------------------------
-# Store per active game with separate buffers
+# Disk loader (supports API-Sports dumps)
+# -------------------------
+
+def load_json_or_jsonl(game_folder: Path, base_name: str) -> List[dict]:
+    p_json = game_folder / f"{base_name}.json"
+    p_jsonl = game_folder / f"{base_name}.jsonl"
+
+    if p_json.exists():
+        raw = json.loads(p_json.read_text(encoding="utf-8"))
+        if isinstance(raw, list):
+            return raw
+        if isinstance(raw, dict) and isinstance(raw.get("response"), list):
+            return raw["response"]
+        raise ValueError(f"{p_json.name} must be a list OR dict with 'response' list")
+
+    if p_jsonl.exists():
+        out: List[dict] = []
+        for line in p_jsonl.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            out.append(json.loads(line))
+        return out
+
+    return []
+
+
+def comment_time_sec(c: dict) -> int:
+    minute = int(c.get("minute", 0) or 0)
+    extra = int(c.get("extra", 0) or 0)
+    second = int(c.get("second", 0) or 0)
+    return (minute + extra) * 60 + second
+
+
+def event_time_tuple(e: dict) -> Tuple[int, int]:
+    t = e.get("time")
+    if isinstance(t, dict):
+        minute = int(t.get("elapsed", 0) or 0)
+        extra = int(t.get("extra", 0) or 0)
+        return (minute, extra)
+    minute = int(e.get("minute", 0) or 0)
+    extra = int(e.get("extra", 0) or 0)
+    return (minute, extra)
+
+
+def event_time_sec(e: dict) -> Optional[int]:
+    m, x = event_time_tuple(e)
+    return (m + x) * 60
+
+
+def is_goal_event(e: dict) -> bool:
+    return e.get("type") == "Goal"
+
+
+def extract_team_name(e: dict) -> Optional[str]:
+    team = e.get("team")
+    if isinstance(team, dict):
+        name = team.get("name")
+        if isinstance(name, str) and name.strip():
+            return name.strip()
+    return None
+
+
+# -------------------------
+# Store buffers
 # -------------------------
 
 @dataclass
 class GameBuffers:
-    """Separate buffers for each type of information."""
-    comments: deque  # deque[str] - last 10 comments
-    events: deque    # deque[str] - last 10 events
-    scores: deque    # deque[str] - last 10 score changes (goals)
-    score_str: str   # current score
-    known_tsec: int  # current game time
+    comments: deque
+    events: deque
+    scores: deque
+    score_str: str
+    known_tsec: int
 
 
 class KafkaContextStore:
     """
-    Kafka-first context builder with SEPARATE buffers:
-      - Last 10 comments  → rag_comments.txt
-      - Last 10 events    → rag_events.txt
-      - Last 10 scores    → rag_scores.txt
-    
-    This provides richer, more structured context for the RAG system.
+    Kafka-first context:
+      - bootstrap from disk up to offset (so if you start at 70', you still have memory)
+      - then consume Kafka topics to keep files updated continuously
     """
 
     def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092", top_k: int = 10):
@@ -312,11 +218,12 @@ class KafkaContextStore:
         self._run_id: Optional[str] = None
         self._active_game_ids: set[str] = set()
         self._buffers: Dict[str, GameBuffers] = {}
-
         self._stop = threading.Event()
         self._threads: List[threading.Thread] = []
 
-    # ---------- public ----------
+    def get_run_id(self) -> Optional[str]:
+        with self._lock:
+            return self._run_id
 
     def reset(self):
         self.stop()
@@ -335,13 +242,8 @@ class KafkaContextStore:
 
     def start(self, run_id: str, active_game_ids: List[str], game_start_offsets: Dict[str, Tuple[int, int]]):
         """
-        Start consuming from Kafka for specified games.
-        Bootstrap each game's context from disk up to its offset.
-        
-        Args:
-            run_id: Unique run identifier
-            active_game_ids: List of game IDs to consume
-            game_start_offsets: Dict mapping game_id to (minute, extra) tuple
+        Bootstraps from disk + start consumers.
+        Consumers use auto_offset_reset="latest" so we only get live stream messages for this run.
         """
         with self._lock:
             if self._run_id is not None:
@@ -349,15 +251,12 @@ class KafkaContextStore:
             self._run_id = run_id
             self._active_game_ids = set(active_game_ids)
 
-        # Bootstrap each game from disk
+        # bootstrap from disk for each game
         for gid in active_game_ids:
-            offset_tuple = game_start_offsets.get(gid, (0, 0))
-            try:
-                self._bootstrap_game_from_disk(run_id, gid, offset_tuple)
-            except Exception as e:
-                print(f"Error bootstrapping {gid}: {e}")
+            start_at = game_start_offsets.get(gid, (0, 0))
+            self._bootstrap_game_from_disk(run_id, gid, start_at)
 
-        # Start Kafka consumers
+        # start consumers
         self._threads = [
             threading.Thread(target=self._consume_comments, daemon=True),
             threading.Thread(target=self._consume_events, daemon=True),
@@ -366,188 +265,158 @@ class KafkaContextStore:
         for t in self._threads:
             t.start()
 
-    def get_comments_text(self, game_id: str) -> str:
-        """Get last 10 comments as text."""
-        with self._lock:
-            buf = self._buffers.get(game_id)
-            if not buf:
-                return ""
-            return "".join(list(buf.comments))
-
-    def get_events_text(self, game_id: str) -> str:
-        """Get last 10 events as text."""
-        with self._lock:
-            buf = self._buffers.get(game_id)
-            if not buf:
-                return ""
-            return "".join(list(buf.events))
-
-    def get_scores_text(self, game_id: str) -> str:
-        """Get last 10 score changes as text."""
-        with self._lock:
-            buf = self._buffers.get(game_id)
-            if not buf:
-                return ""
-            return "".join(list(buf.scores))
-
-    def get_run_id(self) -> Optional[str]:
-        with self._lock:
-            return self._run_id
-
-    # ---------- disk bootstrap ----------
+    # -------------------------
+    # runtime dirs + writers
+    # -------------------------
 
     def _game_runtime_dir(self, run_id: str, game_id: str) -> Path:
-        p = self.runtime_dir / run_id / game_id
-        p.mkdir(parents=True, exist_ok=True)
-        return p
+        # Only use game_id in path - overwrite same file each time
+        return self.runtime_dir / game_id
+
+    def _write_all_files(self, run_id: str, game_id: str):
+        with self._lock:
+            buf = self._buffers.get(game_id)
+            if not buf:
+                return
+
+            # Use only game_id directory (no run_id subdirectory)
+            rdir = self._game_runtime_dir(run_id, game_id)
+            rdir.mkdir(parents=True, exist_ok=True)
+
+            hdr = header_text(run_id, game_id, buf.known_tsec, buf.score_str)
+
+            # separate files (still create these for reference)
+            (rdir / "rag_comments.txt").write_text(hdr + "".join(list(buf.comments)), encoding="utf-8")
+            (rdir / "rag_events.txt").write_text(hdr + "".join(list(buf.events)), encoding="utf-8")
+            (rdir / "rag_scores.txt").write_text(hdr + "".join(list(buf.scores)), encoding="utf-8")
+
+            # combined file (what the chatbot will use)
+            # Include ALL items from each buffer (up to 10 each = 30 total)
+            combined = []
+            combined.extend(list(buf.scores))     # Up to 10 scores
+            combined.extend(list(buf.events))     # Up to 10 events
+            combined.extend(list(buf.comments))   # Up to 10 comments
+            # Don't limit - give LLM all available context (max 30 items)
+            (rdir / "rag_recap.txt").write_text(hdr + "".join(combined), encoding="utf-8")
+
+    def get_topk_text(self, game_id: str) -> str:
+        with self._lock:
+            rid = self._run_id
+        if not rid:
+            return ""
+        p = self._game_runtime_dir(rid, game_id) / "rag_recap.txt"
+        return p.read_text(encoding="utf-8") if p.exists() else ""
+
+    # -------------------------
+    # bootstrap from disk
+    # -------------------------
 
     def _bootstrap_game_from_disk(self, run_id: str, game_id: str, start_at_tuple: Tuple[int, int]):
-        """
-        Bootstrap game buffers from disk files.
-        Pre-fills buffers with last 10 items BEFORE start_at_tuple.
-        
-        Args:
-            run_id: Unique run identifier
-            game_id: Game identifier
-            start_at_tuple: (minute, extra) tuple to start from
-        """
         gfolder = self.data_dir / game_id
-        meta_path = gfolder / "meta.json"
-        if not meta_path.exists():
-            raise FileNotFoundError(f"Missing meta.json for {game_id}")
-
-        meta = json.loads(meta_path.read_text(encoding="utf-8"))
-        home = (meta.get("team_home") or "").strip()
-        away = (meta.get("team_away") or "").strip()
+        minute, extra = int(start_at_tuple[0]), int(start_at_tuple[1])
+        offset_tsec = (minute + extra) * 60
 
         comments = load_json_or_jsonl(gfolder, "comments")
         events = load_json_or_jsonl(gfolder, "events")
 
-        comments.sort(key=comment_time_tuple)
-        events = [e for e in events if event_time_tuple(e) is not None]
-        events.sort(key=event_time_tuple)
+        comments.sort(key=comment_time_sec)
+        events = [e for e in events if event_time_sec(e) is not None]
+        events.sort(key=lambda e: event_time_sec(e) or 0)
 
-        # Find indices before offset using TUPLE comparison
-        c_idx = 0
-        while c_idx < len(comments) and comment_time_tuple(comments[c_idx]) < start_at_tuple:
-            c_idx += 1
-        e_idx = 0
-        while e_idx < len(events) and event_time_tuple(events[e_idx]) < start_at_tuple:
-            e_idx += 1
+        # last K comments BEFORE offset
+        past_comments = [c for c in comments if comment_time_sec(c) <= offset_tsec]
+        past_comments = past_comments[-self.top_k:]
+        comment_lines = deque(maxlen=self.top_k)
+        for c in past_comments:
+            comment_lines.append(
+                comment_line({
+                    "event_time_sec": comment_time_sec(c),
+                    "minute": int(c.get("minute", 0) or 0),
+                    "extra": int(c.get("extra", 0) or 0),
+                    "type": c.get("type") or "Comment",
+                    "text": c.get("text") or "",
+                })
+            )
 
-        # ========================================
-        # PRE-FILL BUFFERS WITH HISTORICAL DATA
-        # ========================================
-        
-        # Collect last 10 comments BEFORE offset
-        recent_comments = []
-        start_c = max(0, c_idx - self.top_k)
-        for i in range(start_c, c_idx):
-            tsec = comment_time_sec(comments[i])
-            txt = str(comments[i].get("text") or "")
-            etype = str(comments[i].get("type") or "Commentary")
-            minute = comments[i].get("minute")
-            extra = comments[i].get("extra")
-            recent_comments.append(comment_line(tsec, txt, etype=etype, minute=minute, extra=extra))
-        
-        # Collect last 10 events BEFORE offset
-        recent_events = []
-        start_e = max(0, e_idx - self.top_k)
-        for i in range(start_e, e_idx):
-            tsec = event_time_sec(events[i]) or 0
-            e = events[i]
-            # Extract minute/extra from event
-            minute = None
-            extra = None
-            if "time" in e and isinstance(e["time"], dict):
-                minute = e["time"].get("elapsed")
-                extra = e["time"].get("extra")
-            elif "minute" in e:
-                minute = e.get("minute")
-                extra = e.get("extra", 0)
-            recent_events.append(event_line(tsec, event_summary(e), minute=minute, extra=extra))
-        
-        # Compute score changes and collect last 10 goals BEFORE offset
-        recent_goals = []
+        # last K events BEFORE offset
+        past_events = [e for e in events if (event_time_sec(e) or 0) <= offset_tsec]
+        past_events = past_events[-self.top_k:]
+        event_lines = deque(maxlen=self.top_k)
+        for e in past_events:
+            m, x = event_time_tuple(e)
+            event_lines.append(
+                event_line({
+                    "event_time_sec": event_time_sec(e) or 0,
+                    "minute": m,
+                    "extra": x,
+                    "type": e.get("type") or "Event",
+                    "detail": e.get("detail"),
+                    "data": e,
+                })
+            )
+
+        # score history (goals) BEFORE offset
+        meta_path = gfolder / "meta.json"
+        home = "Home"
+        away = "Away"
+        if meta_path.exists():
+            try:
+                meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                home = meta.get("team_home", home)
+                away = meta.get("team_away", away)
+            except Exception:
+                pass
+
         score_home = 0
         score_away = 0
-        
-        for i in range(0, e_idx):
-            e = events[i]
+        goal_lines = []
+        for e in past_events:
             if not is_goal_event(e):
                 continue
             team = extract_team_name(e)
             if not team:
                 continue
-            
-            # Compute new score
-            detail = e.get("detail") if isinstance(e.get("detail"), str) else None
-            new_home, new_away, why = apply_goal(score_home, score_away, team, home, away, detail)
-            score_home, score_away = new_home, new_away
-            
-            # Extract goal details
-            scorer = None
-            assist = None
-            goal_type = detail or "Normal Goal"
-            
-            if isinstance(e.get("player"), dict):
-                scorer = e["player"].get("name")
-            
-            if isinstance(e.get("assist"), dict):
-                assist = e["assist"].get("name")
-            
-            # Extract minute/extra
-            minute = None
-            extra = None
-            if "time" in e and isinstance(e["time"], dict):
-                minute = e["time"].get("elapsed")
-                extra = e["time"].get("extra")
-            elif "minute" in e:
-                minute = e.get("minute")
-                extra = e.get("extra", 0)
-            
-            # Record this goal with details
-            tsec = event_time_sec(e) or 0
-            goal_str = f"{score_home}-{score_away}"
-            recent_goals.append(score_line(tsec, goal_str, why, scorer=scorer, assist=assist, goal_type=goal_type, minute=minute, extra=extra))
-        
-        # Keep only last 10 goals
-        if len(recent_goals) > self.top_k:
-            recent_goals = recent_goals[-self.top_k:]
-        
+            # update
+            if team == home:
+                score_home += 1
+            elif team == away:
+                score_away += 1
+            m, x = event_time_tuple(e)
+            scorer = e.get("player", {}).get("name") if isinstance(e.get("player"), dict) else None
+            assist = e.get("assist", {}).get("name") if isinstance(e.get("assist"), dict) else None
+            goal_type = e.get("detail")
+
+            goal_lines.append(score_line({
+                "tsec": event_time_sec(e) or 0,
+                "minute": m,
+                "extra": x,
+                "score_home": score_home,
+                "score_away": score_away,
+                "score_str": f"{score_home}-{score_away}",
+                "team": team,
+                "scorer": scorer,
+                "assist": assist,
+                "goal_type": goal_type,
+            }))
+
+        goal_lines = goal_lines[-self.top_k:]
+        score_deque = deque(goal_lines, maxlen=self.top_k)
         score_str = f"{score_home}-{score_away}"
-        
-        # Initialize buffers WITH historical data
-        comments_deque = deque(recent_comments, maxlen=self.top_k)
-        events_deque = deque(recent_events, maxlen=self.top_k)
-        scores_deque = deque(recent_goals, maxlen=self.top_k)
-        
+
         with self._lock:
             self._buffers[game_id] = GameBuffers(
-                comments=comments_deque,
-                events=events_deque,
-                scores=scores_deque,
+                comments=comment_lines,
+                events=event_lines,
+                scores=score_deque,
                 score_str=score_str,
-                known_tsec=(start_at_tuple[0] + start_at_tuple[1]) * 60,
+                known_tsec=offset_tsec,
             )
-        
-        # Write initial files with historical data
-        rdir = self._game_runtime_dir(run_id, game_id)
-        
-        minute, extra = start_at_tuple
-        print(f"📦 Pre-filled buffers for {game_id}:")
-        print(f"   Comments: {len(recent_comments)} items")
-        print(f"   Events: {len(recent_events)} items")
-        print(f"   Goals: {len(recent_goals)} items")
-        print(f"   Starting at: {minute}' +{extra}' (Score: {score_str})")
-        
-        # Write all three files with pre-filled data
-        known_tsec = (minute + extra) * 60
-        self._write_comments_file(run_id, game_id, known_tsec, score_str, comments_deque)
-        self._write_events_file(run_id, game_id, known_tsec, score_str, events_deque)
-        self._write_scores_file(run_id, game_id, known_tsec, score_str, scores_deque)
 
-    # ---------- consumers ----------
+        self._write_all_files(run_id, game_id)
+
+    # -------------------------
+    # Kafka consumers (LIVE)
+    # -------------------------
 
     def _consume_comments(self):
         consumer = KafkaConsumer(
@@ -561,8 +430,7 @@ class KafkaContextStore:
         )
         while not self._stop.is_set():
             for msg in consumer:
-                item = msg.value
-                self._handle_comment(item)
+                self._handle_comment(msg.value)
                 if self._stop.is_set():
                     break
 
@@ -578,8 +446,7 @@ class KafkaContextStore:
         )
         while not self._stop.is_set():
             for msg in consumer:
-                item = msg.value
-                self._handle_event(item)
+                self._handle_event(msg.value)
                 if self._stop.is_set():
                     break
 
@@ -595,139 +462,73 @@ class KafkaContextStore:
         )
         while not self._stop.is_set():
             for msg in consumer:
-                item = msg.value
-                self._handle_score(item)
+                self._handle_score(msg.value)
                 if self._stop.is_set():
                     break
 
-    # ---------- handlers ----------
+    # -------------------------
+    # handlers
+    # -------------------------
 
-    def _handle_comment(self, payload: dict):
-        run_id = str(payload.get("run_id") or "")
-        game_id = str(payload.get("game_id") or "")
-        tsec = int(payload.get("event_time_sec") or 0)
-        text = str(payload.get("text") or "")
-        etype = str(payload.get("type") or "Commentary")
-        
-        # Extract minute and extra from payload
-        minute = payload.get("minute")
-        extra = payload.get("extra")
+    def _accept(self, item: dict) -> Tuple[Optional[str], Optional[str]]:
+        run_id = item.get("run_id")
+        game_id = item.get("game_id")
+        with self._lock:
+            if self._run_id != run_id:
+                return None, None
+            if game_id not in self._active_game_ids:
+                return None, None
+        return run_id, game_id
+
+    def _handle_comment(self, item: dict):
+        run_id, game_id = self._accept(item)
+        if not run_id:
+            return
+
+        line = comment_line(item)
 
         with self._lock:
-            if run_id != self._run_id or game_id not in self._active_game_ids:
-                return
             buf = self._buffers.get(game_id)
             if not buf:
                 return
-            buf.known_tsec = max(buf.known_tsec, tsec)
-            line = comment_line(tsec, text, etype=etype, minute=minute, extra=extra)
             buf.comments.append(line)
-            score_str = buf.score_str
+            # update known time
+            tsec = int(item.get("event_time_sec", 0) or 0)
+            buf.known_tsec = max(buf.known_tsec, tsec)
 
-        self._write_comments_file(run_id, game_id, buf.known_tsec, score_str, buf.comments)
+        self._write_all_files(run_id, game_id)
 
-    def _handle_event(self, payload: dict):
-        run_id = str(payload.get("run_id") or "")
-        game_id = str(payload.get("game_id") or "")
-        tsec = int(payload.get("event_time_sec") or 0)
+    def _handle_event(self, item: dict):
+        run_id, game_id = self._accept(item)
+        if not run_id:
+            return
 
-        raw = payload.get("data") or {}
-        if not isinstance(raw, dict):
-            raw = {}
-
-        # Extract minute and extra from event data
-        minute = None
-        extra = None
-        if "time" in raw and isinstance(raw["time"], dict):
-            minute = raw["time"].get("elapsed")
-            extra = raw["time"].get("extra")
-        elif "minute" in raw:
-            minute = raw.get("minute")
-            extra = raw.get("extra", 0)
-
-        summary = event_summary(raw)
-        line = event_line(tsec, summary, minute=minute, extra=extra)
+        line = event_line(item)
 
         with self._lock:
-            if run_id != self._run_id or game_id not in self._active_game_ids:
-                return
             buf = self._buffers.get(game_id)
             if not buf:
                 return
-            buf.known_tsec = max(buf.known_tsec, tsec)
             buf.events.append(line)
-            score_str = buf.score_str
+            tsec = int(item.get("event_time_sec", 0) or 0)
+            buf.known_tsec = max(buf.known_tsec, tsec)
 
-        self._write_events_file(run_id, game_id, buf.known_tsec, score_str, buf.events)
+        self._write_all_files(run_id, game_id)
 
-    def _handle_score(self, payload: dict):
-        run_id = str(payload.get("run_id") or "")
-        game_id = str(payload.get("game_id") or "")
-        tsec = int(payload.get("event_time_sec") or 0)
-        score_str = str(payload.get("score_str") or "0-0")
-        why = str(payload.get("why") or "score update")
-        
-        # Extract detailed goal information
-        scorer = payload.get("scorer")
-        assist = payload.get("assist")
-        goal_type = payload.get("goal_type")
-        minute = payload.get("minute")
-        extra = payload.get("extra")
-        
-        line = score_line(
-            tsec, 
-            score_str, 
-            why, 
-            scorer=scorer if isinstance(scorer, str) else None,
-            assist=assist if isinstance(assist, str) else None,
-            goal_type=goal_type if isinstance(goal_type, str) else None,
-            minute=minute,
-            extra=extra
-        )
+    def _handle_score(self, item: dict):
+        run_id, game_id = self._accept(item)
+        if not run_id:
+            return
+
+        line = score_line(item)
 
         with self._lock:
-            if run_id != self._run_id or game_id not in self._active_game_ids:
-                return
             buf = self._buffers.get(game_id)
             if not buf:
                 return
-            buf.score_str = score_str
-            buf.known_tsec = max(buf.known_tsec, tsec)
             buf.scores.append(line)
+            buf.score_str = item.get("score_str") or buf.score_str
+            tsec = int(item.get("tsec", 0) or 0)
+            buf.known_tsec = max(buf.known_tsec, tsec)
 
-        self._write_scores_file(run_id, game_id, buf.known_tsec, score_str, buf.scores)
-
-    # ---------- file writers ----------
-
-    def _write_comments_file(self, run_id: str, game_id: str, known_tsec: int, score_str: str, comments_deque: deque):
-        rdir = self._game_runtime_dir(run_id, game_id)
-        path = rdir / "rag_comments.txt"
-        
-        hdr = header_text(run_id, game_id, known_tsec, score_str)
-        body = "".join(list(comments_deque))
-        
-        content = hdr + f"LAST {self.top_k} COMMENTS:\n" + "-"*40 + "\n" + body
-        path.write_text(content, encoding="utf-8")
-
-    def _write_events_file(self, run_id: str, game_id: str, known_tsec: int, score_str: str, events_deque: deque):
-        rdir = self._game_runtime_dir(run_id, game_id)
-        path = rdir / "rag_events.txt"
-        
-        hdr = header_text(run_id, game_id, known_tsec, score_str)
-        body = "".join(list(events_deque))
-        
-        content = hdr + f"LAST {self.top_k} EVENTS:\n" + "-"*40 + "\n" + body
-        path.write_text(content, encoding="utf-8")
-
-    def _write_scores_file(self, run_id: str, game_id: str, known_tsec: int, score_str: str, scores_deque: deque):
-        rdir = self._game_runtime_dir(run_id, game_id)
-        path = rdir / "rag_scores.txt"
-        
-        hdr = header_text(run_id, game_id, known_tsec, score_str)
-        body = "".join(list(scores_deque))
-        
-        if not body:
-            body = "(No goals yet)\n"
-        
-        content = hdr + f"LAST {self.top_k} GOALS/SCORE CHANGES:\n" + "-"*40 + "\n" + body
-        path.write_text(content, encoding="utf-8")
+        self._write_all_files(run_id, game_id)

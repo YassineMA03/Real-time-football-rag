@@ -1,9 +1,0 @@
-RUN: run_1767057005
-GAME: chelsea_aston_villa_2025-12-27
-Current game time: 80:00
-SCORE: 1-1
-----------------------------------------
-LAST 10 GOALS/SCORE CHANGES:
-----------------------------------------
-[GAME 37:00] SCORE: 1-0 | ⚽ Joao Pedro | 🅰️ R. James | Type: Normal Goal
-[GAME 63:00] SCORE: 1-1 | ⚽ O. Watkins | Type: Normal Goal

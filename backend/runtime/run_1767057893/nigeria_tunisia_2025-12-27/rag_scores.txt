@@ -1,8 +1,0 @@
-RUN: run_1767057893
-GAME: nigeria_tunisia_2025-12-27
-Current game time: 30:00
-SCORE: 0-0
-----------------------------------------
-LAST 10 GOALS/SCORE CHANGES:
-----------------------------------------
-(No goals yet)

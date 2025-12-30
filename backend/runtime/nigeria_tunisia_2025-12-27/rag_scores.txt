@@ -1,0 +1,6 @@
+RUN: run_1767134732
+GAME: nigeria_tunisia_2025-12-27
+Current game time: 7833:20
+SCORE: 1-0
+----------------------------------------
+[GAME 44' | 1st Half] SCORE: 1-0 | Team: Nigeria | ⚽ V. Osimhen | 🅰️ A. Lookman | Type: Normal Goal

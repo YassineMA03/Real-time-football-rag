@@ -1,9 +1,0 @@
-RUN: run_1767034788
-GAME: chelsea_aston_villa_2025-12-27
-Current game time: 47:00
-SCORE: 1-0
-----------------------------------------
-LAST 10 EVENTS:
-----------------------------------------
-[GAME 30:00] EVENT: Card | Yellow Card | team=Aston Villa | player=Matty Cash
-[GAME 37:00] EVENT: Goal | Normal Goal | team=Chelsea | player=Joao Pedro

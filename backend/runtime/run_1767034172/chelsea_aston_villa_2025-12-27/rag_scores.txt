@@ -1,8 +1,0 @@
-RUN: run_1767034172
-GAME: chelsea_aston_villa_2025-12-27
-Current game time: 0:00
-SCORE: 0-0
-----------------------------------------
-LAST 10 GOALS/SCORE CHANGES:
-----------------------------------------
-(No goals yet)

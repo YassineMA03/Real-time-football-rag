@@ -264,16 +264,6 @@ venv\Scripts\activate
 **Install Python dependencies:**
 
 ```bash
-# Install all required packages
-pip install fastapi uvicorn kafka-python mistralai python-multipart
-
-# Or create requirements.txt first:
-# fastapi
-# uvicorn
-# kafka-python
-# mistralai
-# python-multipart
-
 # Then install from file:
 pip install -r requirements.txt
 ```

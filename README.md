@@ -46,24 +46,28 @@ Kafka is the **heart of this system** - it enables real-time streaming, scalabil
 ### 📊 **System Components**
 
 **Kafka Cluster:**
+
 - Manages three topics: games.comments, games.events, games.scores
 - Each topic has one partition for ordered message delivery
 - Messages persist for 7 days (default retention)
 - Coordinated by Zookeeper for metadata management
 
 **Producer (replay_streamer.py):**
+
 - Reads match data from JSON files
 - Publishes messages to appropriate Kafka topics
 - Each message contains: run_id, game_id, minute, extra, and event data
 - Simulates real-time API by streaming chronologically
 
 **Consumer (kafka_context_store.py):**
+
 - Subscribes to all three Kafka topics
 - Maintains rolling buffers (last 10 items per type)
 - Automatically discards old messages when buffer is full
 - Writes context to files in backend/runtime/
 
 **Topics Structure:**
+
 - **games.comments**: Match commentary and announcements
 - **games.events**: Goals, cards, substitutions, VAR decisions
 - **games.scores**: Score changes with goal details and scorers
@@ -79,6 +83,7 @@ Kafka is the **heart of this system** - it enables real-time streaming, scalabil
 **Step 4:** Consumer maintains three rolling buffers (deques with maxlen=10)
 
 **Step 5:** Consumer writes four files per match:
+
 - rag_comments.txt (10 latest comments)
 - rag_events.txt (10 latest events)
 - rag_scores.txt (10 latest goals)
@@ -89,12 +94,14 @@ Kafka is the **heart of this system** - it enables real-time streaming, scalabil
 ### ⚙️ **Key Configurations**
 
 **Producer Settings:**
+
 - Bootstrap server: localhost:9092
 - Message serialization: JSON
 - Acknowledgment level: Wait for leader
 - Retry attempts: 3
 
 **Consumer Settings:**
+
 - Consumer group: rag-group
 - Offset reset: earliest (reads from beginning)
 - Auto-commit: enabled
@@ -102,6 +109,7 @@ Kafka is the **heart of this system** - it enables real-time streaming, scalabil
 - Max poll records: 500
 
 **Context Store:**
+
 - Buffer size: 10 items per type (comments, events, scores)
 - Total context: 30 items maximum
 - File updates: After each new message
@@ -109,15 +117,15 @@ Kafka is the **heart of this system** - it enables real-time streaming, scalabil
 
 ### 📈 **Architecture Benefits**
 
-| Feature | Benefit |
-|---------|---------|
-| **Decoupling** | Producer and consumer run independently |
-| **Scalability** | Can add multiple consumers for parallel processing |
-| **Reliability** | Messages persist; can replay from any point in time |
-| **Ordering** | Messages within partition maintain chronological order |
-| **Multiple Consumers** | Easy to add analytics, logging, or monitoring |
-| **Time Travel** | Can start streaming from any minute (e.g., 45' +2') |
-| **Fault Tolerance** | If consumer crashes, it resumes from last committed offset |
+| Feature                | Benefit                                                    |
+| ---------------------- | ---------------------------------------------------------- |
+| **Decoupling**         | Producer and consumer run independently                    |
+| **Scalability**        | Can add multiple consumers for parallel processing         |
+| **Reliability**        | Messages persist; can replay from any point in time        |
+| **Ordering**           | Messages within partition maintain chronological order     |
+| **Multiple Consumers** | Easy to add analytics, logging, or monitoring              |
+| **Time Travel**        | Can start streaming from any minute (e.g., 45' +2')        |
+| **Fault Tolerance**    | If consumer crashes, it resumes from last committed offset |
 
 ### 🎯 **Why Kafka?**
 
@@ -144,6 +152,7 @@ You can monitor Kafka health with built-in tools:
 **Check consumer lag:** See how far behind consumers are from latest messages
 
 This helps debug issues like:
+
 - Messages not being consumed
 - Old run_id causing rejections
 - Consumer offset reset problems
@@ -176,6 +185,7 @@ project/
 ## ✨ Features
 
 ### Backend
+
 - ✅ **Real-time streaming** simulation with Kafka
 - ✅ **Tuple-based time ordering** (45' +1' < 45' +3' < 46')
 - ✅ **Contextual LLM responses** with Mistral AI
@@ -184,6 +194,7 @@ project/
 - ✅ **Automatic context management** (last 30 items: 10 scores + 10 events + 10 comments)
 
 ### Frontend
+
 - ✅ **Match selection** with custom start time (minute + extra)
 - ✅ **Live match status** (score, time, status)
 - ✅ **Per-match chatbot** with scrollable history
@@ -202,18 +213,22 @@ project/
 ### 1. Install Kafka
 
 **macOS (Homebrew):**
+
 ```bash
 brew install kafka
 ```
 
 **Linux (Manual):**
+
 ```bash
 # Download Kafka
 wget https://downloads.apache.org/kafka/3.6.0/kafka_2.13-3.6.0.tgz
 tar -xzf kafka_2.13-3.6.0.tgz
 cd kafka_2.13-3.6.0
 ```
+
 **Windows:**
+
 ```powershell
 # Download Kafka from https://kafka.apache.org/downloads
 # Extract to C:\kafka
@@ -227,43 +242,108 @@ choco install kafka
 
 ### 2. Setup Backend
 
+**Create Python virtual environment (recommended):**
+
 ```bash
-# Install Python dependencies
+# Navigate to project directory
+cd football-rag-system
+
+# Create virtual environment
+python -m venv venv
+
+# Activate it:
+# macOS/Linux:
+source venv/bin/activate
+
+# Windows:
+venv\Scripts\activate
+
+# You should see (venv) in your terminal prompt
+```
+
+**Install Python dependencies:**
+
+```bash
+# Install all required packages
 pip install fastapi uvicorn kafka-python mistralai python-multipart
 
-# Set environment variables
-export MISTRAL_API_KEY="your_mistral_api_key_here"
-export MISTRAL_MODEL="mistral-small-latest"
+# Or create requirements.txt first:
+# fastapi
+# uvicorn
+# kafka-python
+# mistralai
+# python-multipart
 
-# Or create .env file
+# Then install from file:
+pip install -r requirements.txt
+```
+
+**Set environment variables:**
+
+```bash
+# Create .env file in project root
+# Add your Mistral API key:
+
+# macOS/Linux:
 echo "MISTRAL_API_KEY=your_mistral_api_key_here" > .env
 echo "MISTRAL_MODEL=mistral-small-latest" >> .env
+
+# Windows (PowerShell):
+"MISTRAL_API_KEY=your_mistral_api_key_here" | Out-File -FilePath .env -Encoding utf8
+"MISTRAL_MODEL=mistral-small-latest" | Out-File -FilePath .env -Append -Encoding utf8
+
+# Or manually create .env file with:
+# MISTRAL_API_KEY=your_actual_key_here
+# MISTRAL_MODEL=mistral-small-latest
 ```
 
 **Get Mistral API Key:** https://console.mistral.ai/
 
+**Note:** The virtual environment keeps dependencies isolated and prevents conflicts with other Python projects.
+
 ### 3. Setup Frontend
 
 ```bash
+# Navigate to frontend directory
 cd frontend
+
+# Install dependencies
 npm install
+
+# This will install Next.js and all required packages from package.json
 ```
 
 ### 4. Start Services
 
-
 **Terminal 1 - Kafka:**
+
 ```bash
+# macOS/Linux:
+kafka-server-start /usr/local/etc/kafka/server.properties
+
+# Windows (PowerShell from C:\kafka):
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+# Or if using WSL2:
 kafka-server-start /usr/local/etc/kafka/server.properties
 ```
 
 **Terminal 2 - Backend:**
+
 ```bash
+# Make sure virtual environment is activated
+# You should see (venv) in your prompt
+# If not:
+# macOS/Linux: source venv/bin/activate
+# Windows: venv\Scripts\activate
+
+# Start backend
 uvicorn backend.app:app --reload
 # Backend running on http://localhost:8000
 ```
 
 **Terminal 3 - Frontend:**
+
 ```bash
 cd frontend
 npm run dev
@@ -286,16 +366,15 @@ npm run dev
 
 ## 📊 How It Works
 
-
 ### Context Management
 
 The system maintains a **rolling window** of the last 10 items of each type:
 
-| Type | Count | Description |
-|------|-------|-------------|
-| Comments | max 10 | Latest commentary |
-| Events |  max 10 | Recent match events (goals, cards, subs) |
-| Scores | max 10 | Goal details with scorers |
+| Type     | Count  | Description                              |
+| -------- | ------ | ---------------------------------------- |
+| Comments | max 10 | Latest commentary                        |
+| Events   | max 10 | Recent match events (goals, cards, subs) |
+| Scores   | max 10 | Goal details with scorers                |
 
 **Total context: 30 items** (combined in `rag_recap.txt`)
 
@@ -366,7 +445,9 @@ temperature = 0.2                       # Response creativity
 ## 📝 API Endpoints
 
 ### `GET /api/games`
+
 List available matches
+
 ```json
 [
   {
@@ -379,7 +460,9 @@ List available matches
 ```
 
 ### `POST /api/replay/start`
+
 Start streaming match(es)
+
 ```json
 {
   "games": [
@@ -393,7 +476,9 @@ Start streaming match(es)
 ```
 
 ### `GET /api/replay/progress`
+
 Get current match status
+
 ```json
 {
   "run_id": "run_1735600000",
@@ -410,7 +495,9 @@ Get current match status
 ```
 
 ### `POST /api/chat`
+
 Ask question about match
+
 ```json
 {
   "game_id": "chelsea_aston_villa_2025-12-27",
@@ -419,6 +506,7 @@ Ask question about match
 ```
 
 Response:
+
 ```json
 {
   "answer": "Chelsea is currently leading 2-0 against Aston Villa...",
@@ -429,6 +517,7 @@ Response:
 ```
 
 ### `POST /api/replay/reset`
+
 Stop all streams and reset
 
 ## 🔬 Technical Details
@@ -498,9 +587,10 @@ For production deployment:
 ### **Before First Push**
 
 **Create .gitignore file** in project root to exclude:
-- Python cache files (__pycache__, *.pyc)
+
+- Python cache files (**pycache**, \*.pyc)
 - Virtual environments (venv/, env/)
-- Environment variables (.env, *.env)
+- Environment variables (.env, \*.env)
 - Runtime data (backend/runtime/)
 - Kafka logs (/tmp/kafka-logs/)
 - Frontend dependencies (node_modules/)
@@ -508,6 +598,7 @@ For production deployment:
 - API keys and credentials
 
 **Critical files to NEVER commit:**
+
 - .env files containing API keys
 - backend/runtime/ directory
 - Kafka data directories
@@ -519,23 +610,27 @@ For production deployment:
 ### **Initial Setup**
 
 **1. Initialize repository:**
+
 - Create .gitignore first
 - Initialize git in project directory
 - Add all files (respecting .gitignore)
 - Make initial commit with descriptive message
 
 **2. Create GitHub repository:**
+
 - Use GitHub web interface or CLI
 - Choose public or private
 - Don't initialize with README (you have one)
 
 **3. Connect and push:**
+
 - Add GitHub as remote origin
 - Push your main branch
 
 ### **Working with Git**
 
 **Feature development workflow:**
+
 - Create feature branch from main
 - Make changes and commit regularly
 - Push branch to GitHub
@@ -544,17 +639,20 @@ For production deployment:
 - Delete branch after merge
 
 **Commit message format:**
+
 - Use clear, descriptive messages
 - Start with type: feat, fix, docs, style, refactor, test, chore
 - Keep first line under 50 characters
 - Add details in body if needed
 
 **Good commit examples:**
+
 - "feat: Add support for multiple simultaneous matches"
 - "fix: Resolve Kafka consumer offset reset issue"
 - "docs: Update README with Kafka architecture"
 
 **Bad commit examples:**
+
 - "updates"
 - "fixed stuff"
 - "changes"
@@ -562,11 +660,13 @@ For production deployment:
 ### **Environment Variables**
 
 **Create .env.example template** (safe to commit):
+
 - Contains variable names with placeholder values
 - Shows users what variables they need
 - Never contains real API keys
 
 **Users copy to .env and fill in real values:**
+
 - Copy .env.example to .env
 - Replace placeholders with actual keys
 - .env stays local (never committed)
@@ -574,6 +674,7 @@ For production deployment:
 ### **Security Checklist**
 
 **Before every commit:**
+
 - [ ] Run git status to see what will be committed
 - [ ] Verify no .env file is staged
 - [ ] Verify no API keys in code
@@ -581,6 +682,7 @@ For production deployment:
 - [ ] Ensure commit message is descriptive
 
 **If you accidentally commit secrets:**
+
 - Remove file from git history immediately
 - Rotate the exposed API key
 - Generate new key in Mistral Console
@@ -589,6 +691,7 @@ For production deployment:
 ### **Repository Structure**
 
 **Commit these:**
+
 - Source code files (.py, .tsx)
 - Configuration files (without secrets)
 - Documentation (README.md)
@@ -597,6 +700,7 @@ For production deployment:
 - .env.example template
 
 **Never commit these:**
+
 - .env files
 - Runtime data
 - Log files
@@ -608,11 +712,13 @@ For production deployment:
 ### **Large Files**
 
 **For match data files over 50MB:**
+
 - Use Git LFS (Large File Storage)
 - Track large JSON files with LFS
 - Prevents repository bloat
 
 **Alternative for very large datasets:**
+
 - Store externally (S3, Google Cloud)
 - Document how to download in README
 - Keep repository lightweight
@@ -620,12 +726,14 @@ For production deployment:
 ### **Clean Repository**
 
 **Before pushing:**
+
 - Remove all runtime files
 - Remove Kafka log directories
 - Remove node_modules (users run npm install)
 - Ensure .gitignore is working
 
 **Maintainability:**
+
 - Keep commits small and focused
 - Write descriptive commit messages
 - Use branches for features
@@ -637,17 +745,20 @@ For production deployment:
 **If API key is committed:**
 
 **Immediate actions:**
+
 1. Go to Mistral Console immediately
 2. Revoke the exposed API key
 3. Generate new API key
 4. Update local .env file
 
 **Clean git history:**
+
 1. Remove file from all commits (advanced Git operation)
 2. Force push to rewrite history
 3. Warn collaborators about force push
 
 **Prevention:**
+
 - Always check git status before committing
 - Use .gitignore from the start
 - Never hardcode API keys
@@ -656,6 +767,7 @@ For production deployment:
 ### **Collaboration Tips**
 
 **Working with team:**
+
 - Pull latest changes before starting work
 - Use descriptive branch names (feature/add-stats)
 - Keep commits atomic (one logical change)
@@ -663,6 +775,7 @@ For production deployment:
 - Review pull requests thoroughly
 
 **Code review checklist:**
+
 - No hardcoded secrets
 - .gitignore is comprehensive
 - Code is documented
@@ -670,6 +783,7 @@ For production deployment:
 - No debugging code left in
 
 **Branch naming:**
+
 - feature/ - New features
 - fix/ - Bug fixes
 - docs/ - Documentation

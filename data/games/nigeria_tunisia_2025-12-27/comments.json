@@ -1,0 +1,190 @@
+[
+  { "minute": 1, "extra": 0, "type": "PeriodStart", "text": "La première mi-temps commence." },
+
+  { "minute": 3, "extra": 0, "type": "Foul", "text": "Faute de Ali Abdi (Tunisie)." },
+  { "minute": 3, "extra": 0, "type": "FreeKickAwarded", "text": "Bright Osayi-Samuel (Nigeria) se voit accorder un coup franc dans sa moitié de terrain." },
+
+  { "minute": 4, "extra": 0, "type": "FreeKickAwarded", "text": "Hazem Mastouri (Tunisie) se voit accorder un coup franc sur l'aile droite." },
+  { "minute": 4, "extra": 0, "type": "Foul", "text": "Faute de Calvin Bassey (Nigeria)." },
+
+  { "minute": 5, "extra": 0, "type": "ShotOffTarget", "text": "Tir non cadré. Hannibal Mejbri (Tunisie) du pied droit à gauche de la surface de réparation. Dernière passe de Elias Achouri d'une passe de la tête." },
+  { "minute": 5, "extra": 0, "type": "Foul", "text": "Faute de Montassar Talbi (Tunisie)." },
+  { "minute": 5, "extra": 0, "type": "FreeKickAwarded", "text": "Akor Adams (Nigeria) se voit accorder un coup franc dans sa moitié de terrain." },
+
+  { "minute": 6, "extra": 0, "type": "ShotOffTarget", "text": "Tir non cadré. Victor Osimhen (Nigeria) du pied droit de l'extérieur de la surface de réparation. Dernière passe de Bright Osayi-Samuel." },
+  { "minute": 6, "extra": 0, "type": "FreeKickAwarded", "text": "Hazem Mastouri (Tunisie) se voit accorder un coup franc sur l'aile droite." },
+  { "minute": 6, "extra": 0, "type": "Foul", "text": "Faute de Calvin Bassey (Nigeria)." },
+
+  { "minute": 8, "extra": 0, "type": "FreeKickAwarded", "text": "Hannibal Mejbri (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 8, "extra": 0, "type": "Foul", "text": "Faute de Bright Osayi-Samuel (Nigeria)." },
+
+  { "minute": 9, "extra": 0, "type": "ShotOffTarget", "text": "Tir non cadré. Victor Osimhen (Nigeria) de la tête à bout portant. Dernière passe de Akor Adams suite à un centre." },
+
+  { "minute": 10, "extra": 0, "type": "ShotBlocked", "text": "Tir contré. Bright Osayi-Samuel (Nigeria) du pied gauche de l'extérieur de la surface de réparation. Dernière passe de Alex Iwobi." },
+  { "minute": 10, "extra": 0, "type": "Corner", "text": "Corner, Nigeria. Corner concédé par Dylan Bronn." },
+
+  { "minute": 11, "extra": 0, "type": "ShotOffTarget", "text": "Tir non cadré. Victor Osimhen (Nigeria) de la tête depuis le point de penalty. Dernière passe de Ademola Lookman." },
+
+  { "minute": 14, "extra": 0, "type": "FreeKickAwarded", "text": "Ali Abdi (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 14, "extra": 0, "type": "Foul", "text": "Faute de Ademola Lookman (Nigeria)." },
+
+  { "minute": 16, "extra": 0, "type": "ShotOffTarget", "text": "Tir non cadré. Frank Onyeka (Nigeria) du pied droit à droite de la surface de réparation. Dernière passe de Akor Adams suite à un centre." },
+
+  { "minute": 17, "extra": 0, "type": "ShotSaved", "text": "Arrêt. Akor Adams (Nigeria) du pied droit de l'extérieur de la surface de réparation voit son tir stoppé. Dernière passe de Semi Ajayi d'une passe de la tête." },
+  { "minute": 17, "extra": 0, "type": "Offside", "text": "Hors jeu, Nigeria. Akor Adams a tenté une passe en profondeur mais Victor Osimhen était hors jeu." },
+
+  { "minute": 20, "extra": 0, "type": "FreeKickAwarded", "text": "Dylan Bronn (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 20, "extra": 0, "type": "Foul", "text": "Faute de Victor Osimhen (Nigeria)." },
+
+  { "minute": 22, "extra": 0, "type": "Foul", "text": "Faute de Ferjani Sassi." },
+  { "minute": 22, "extra": 0, "type": "FreeKickAwarded", "text": "Ademola Lookman (Nigeria) se voit accorder un coup franc dans la moitié de terrain adverse." },
+
+  { "minute": 23, "extra": 0, "type": "FreeKickAwarded", "text": "Hazem Mastouri (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 23, "extra": 0, "type": "Foul", "text": "Faute de Bruno Onyemaechi (Nigeria)." },
+
+  { "minute": 25, "extra": 0, "type": "Foul", "text": "Faute de Montassar Talbi (Tunisie)." },
+  { "minute": 25, "extra": 0, "type": "FreeKickAwarded", "text": "Victor Osimhen (Nigeria) se voit accorder un coup franc sur l'aile droite." },
+
+  { "minute": 27, "extra": 0, "type": "Corner", "text": "Corner, Nigeria. Corner concédé par Hannibal Mejbri." },
+  { "minute": 27, "extra": 0, "type": "ShotOffTarget", "text": "Tir non cadré. Semi Ajayi (Nigeria) de la tête depuis le point de penalty. Dernière passe de Ademola Lookman suite à un centre." },
+
+  { "minute": 29, "extra": 0, "type": "ShotOffTarget", "text": "Tir non cadré. Victor Osimhen (Nigeria) de la tête à bout portant. Dernière passe de Calvin Bassey suite à un centre." },
+
+  { "minute": 30, "extra": 0, "type": "Stoppage", "text": "Le jeu est interrompu: Victor Osimhen (Nigeria) sur blessure." },
+  { "minute": 30, "extra": 0, "type": "Restart", "text": "Le match reprend suite à une courte interruption." },
+
+  { "minute": 31, "extra": 0, "type": "Corner", "text": "Corner, Tunisie. Corner concédé par Semi Ajayi." },
+
+  { "minute": 32, "extra": 0, "type": "ShotOffTarget", "text": "Tir non cadré. Ali Abdi (Tunisie) du pied gauche de l'extérieur de la surface de réparation." },
+  { "minute": 32, "extra": 0, "type": "Foul", "text": "Faute de Ali Abdi (Tunisie)." },
+  { "minute": 32, "extra": 0, "type": "FreeKickAwarded", "text": "Bright Osayi-Samuel (Nigeria) se voit accorder un coup franc dans sa moitié de terrain." },
+
+  { "minute": 35, "extra": 0, "type": "ShotOffTarget", "text": "Tir non cadré. Wilfred Ndidi (Nigeria) du pied droit de l'extérieur de la surface de réparation. Dernière passe de Calvin Bassey." },
+
+  { "minute": 36, "extra": 0, "type": "Corner", "text": "Corner, Tunisie. Corner concédé par Frank Onyeka." },
+  { "minute": 37, "extra": 0, "type": "Corner", "text": "Corner, Tunisie. Corner concédé par Wilfred Ndidi." },
+
+  { "minute": 39, "extra": 0, "type": "FreeKickAwarded", "text": "Ali Abdi (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 39, "extra": 0, "type": "Foul", "text": "Faute de Akor Adams (Nigeria)." },
+
+  { "minute": 40, "extra": 0, "type": "Foul", "text": "Faute de Mohamed Ben Romdhane (Tunisie)." },
+  { "minute": 40, "extra": 0, "type": "FreeKickAwarded", "text": "Bruno Onyemaechi (Nigeria) se voit accorder un coup franc dans sa moitié de terrain." },
+
+  { "minute": 41, "extra": 0, "type": "Foul", "text": "Faute de Mohamed Ben Romdhane (Tunisie)." },
+  { "minute": 41, "extra": 0, "type": "FreeKickAwarded", "text": "Bruno Onyemaechi (Nigeria) se voit accorder un coup franc sur l'aile gauche." },
+
+  { "minute": 42, "extra": 0, "type": "Foul", "text": "Faute de Mohamed Ben Romdhane (Tunisie)." },
+  { "minute": 42, "extra": 0, "type": "FreeKickAwarded", "text": "Calvin Bassey (Nigeria) se voit accorder un coup franc dans sa moitié de terrain." },
+
+  { "minute": 44, "extra": 0, "type": "Goal", "text": "But! Nigeria 1, Tunisie 0. Victor Osimhen (Nigeria) marque de la tête. Passe décisive de Ademola Lookman suite à un centre." },
+  { "minute": 44, "extra": 0, "type": "CardYellow", "text": "Victor Osimhen (Nigeria) reçoit un carton jaune." },
+
+  { "minute": 45, "extra": 1, "type": "StoppageTime", "text": "Le quatrième arbitre vient d'indiquer 2 minutes de temps additionnel." },
+  { "minute": 45, "extra": 3, "type": "PeriodEnd", "text": "La première mi-temps se termine, Nigeria 1, Tunisie 0." },
+
+  { "minute": 46, "extra": 0, "type": "PeriodStart", "text": "La deuxième mi-temps commence Nigeria 1, Tunisie 0." },
+
+  { "minute": 46, "extra": 0, "type": "Foul", "text": "Faute de Mohamed Ben Romdhane (Tunisie)." },
+  { "minute": 46, "extra": 0, "type": "FreeKickAwarded", "text": "Bright Osayi-Samuel (Nigeria) se voit accorder un coup franc sur l'aile droite." },
+
+  { "minute": 47, "extra": 0, "type": "Foul", "text": "Faute de Hannibal Mejbri (Tunisie)." },
+  { "minute": 47, "extra": 0, "type": "FreeKickAwarded", "text": "Semi Ajayi (Nigeria) se voit accorder un coup franc sur l'aile droite." },
+
+  { "minute": 48, "extra": 0, "type": "FreeKickAwarded", "text": "Hannibal Mejbri (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 48, "extra": 0, "type": "Foul", "text": "Faute de Wilfred Ndidi (Nigeria)." },
+  { "minute": 48, "extra": 0, "type": "Offside", "text": "Hors jeu, Tunisie. Hannibal Mejbri a tenté une passe en profondeur mais Elias Achouri était hors jeu." },
+
+  { "minute": 49, "extra": 0, "type": "Corner", "text": "Corner, Nigeria. Corner concédé par Yan Valery." },
+
+  { "minute": 50, "extra": 0, "type": "Goal", "text": "But! Nigeria 2, Tunisie 0. Wilfred Ndidi (Nigeria) marque de la tête. Passe décisive de Ademola Lookman suite à un centre sur corner." },
+
+  { "minute": 51, "extra": 0, "type": "FreeKickAwarded", "text": "Hannibal Mejbri (Tunisie) se voit accorder un coup franc sur l'aile gauche." },
+  { "minute": 51, "extra": 0, "type": "Foul", "text": "Faute de Calvin Bassey (Nigeria)." },
+
+  { "minute": 53, "extra": 0, "type": "FreeKickAwarded", "text": "Elias Achouri (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 53, "extra": 0, "type": "Foul", "text": "Faute de Ademola Lookman (Nigeria)." },
+
+  { "minute": 54, "extra": 0, "type": "ShotBlocked", "text": "Tir contré. Ademola Lookman (Nigeria) du pied droit de l'extérieur de la surface de réparation. Dernière passe de Victor Osimhen." },
+
+  { "minute": 55, "extra": 0, "type": "FreeKickAwarded", "text": "Hannibal Mejbri (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 55, "extra": 0, "type": "Foul", "text": "Faute de Semi Ajayi (Nigeria)." },
+
+  { "minute": 56, "extra": 0, "type": "CardYellow", "text": "Semi Ajayi (Nigeria) reçoit un carton jaune pour jeu dangereux." },
+
+  { "minute": 57, "extra": 0, "type": "Stoppage", "text": "Le jeu est interrompu: Mohamed Ben Romdhane (Tunisie) sur blessure." },
+  { "minute": 59, "extra": 0, "type": "Restart", "text": "Le match reprend suite à une courte interruption." },
+
+  { "minute": 61, "extra": 0, "type": "ShotBlocked", "text": "Tir contré. Akor Adams (Nigeria) du pied gauche depuis le point de penalty. Dernière passe de Victor Osimhen d'une passe de la tête." },
+  { "minute": 61, "extra": 0, "type": "Corner", "text": "Corner, Nigeria. Corner concédé par Dylan Bronn." },
+  { "minute": 61, "extra": 0, "type": "Substitution", "text": "Remplacement, Tunisie. Sebastian Tounekti remplace Mohamed Ben Romdhane sur blessure." },
+
+  { "minute": 62, "extra": 0, "type": "FreeKickAwarded", "text": "Ali Abdi (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 62, "extra": 0, "type": "Foul", "text": "Faute de Victor Osimhen (Nigeria)." },
+
+  { "minute": 63, "extra": 0, "type": "Foul", "text": "Faute de Ferjani Sassi (Tunisie)." },
+  { "minute": 63, "extra": 0, "type": "FreeKickAwarded", "text": "Wilfred Ndidi (Nigeria) se voit accorder un coup franc sur l'aile droite." },
+
+  { "minute": 67, "extra": 0, "type": "Goal", "text": "But! Nigeria 3, Tunisie 0. Ademola Lookman (Nigeria) marque du pied gauche. Passe décisive de Victor Osimhen suite à une contre-attaque." },
+
+  { "minute": 69, "extra": 0, "type": "FreeKickAwarded", "text": "Hazem Mastouri (Tunisie) se voit accorder un coup franc sur l'aile droite." },
+  { "minute": 69, "extra": 0, "type": "Foul", "text": "Faute de Calvin Bassey (Nigeria)." },
+
+  { "minute": 70, "extra": 0, "type": "ShotOffTarget", "text": "Tir non cadré. Sebastian Tounekti (Tunisie) du pied droit de l'extérieur de la surface de réparation." },
+
+  { "minute": 71, "extra": 0, "type": "Foul", "text": "Faute de Elias Achouri (Tunisie)." },
+  { "minute": 71, "extra": 0, "type": "FreeKickAwarded", "text": "Bruno Onyemaechi (Nigeria) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 71, "extra": 0, "type": "FreeKickAwarded", "text": "Hazem Mastouri (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 71, "extra": 0, "type": "Foul", "text": "Faute de Wilfred Ndidi (Nigeria)." },
+
+  { "minute": 72, "extra": 0, "type": "FreeKickAwarded", "text": "Hannibal Mejbri (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 72, "extra": 0, "type": "Foul", "text": "Faute de Wilfred Ndidi (Nigeria)." },
+  { "minute": 72, "extra": 0, "type": "FreeKickAwarded", "text": "Hannibal Mejbri (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+
+  { "minute": 73, "extra": 0, "type": "Foul", "text": "Faute de Ellyes Skhiri (Tunisie)." },
+  { "minute": 73, "extra": 0, "type": "FreeKickAwarded", "text": "Frank Onyeka (Nigeria) se voit accorder un coup franc dans sa moitié de terrain." },
+
+  { "minute": 74, "extra": 0, "type": "FreeKickAwarded", "text": "Ali Abdi (Tunisie) se voit accorder un coup franc sur l'aile gauche." },
+  { "minute": 74, "extra": 0, "type": "Foul", "text": "Faute de Wilfred Ndidi (Nigeria)." },
+  { "minute": 74, "extra": 0, "type": "Goal", "text": "But! Nigeria 3, Tunisie 1. Montassar Talbi (Tunisie) marque de la tête. Passe décisive de Hannibal Mejbri suite à un centre suite à un coup franc." },
+
+  { "minute": 75, "extra": 0, "type": "Substitution", "text": "Remplacement, Tunisie. Ismaël Gharbi remplace Elias Achouri." },
+
+  { "minute": 77, "extra": 0, "type": "Stoppage", "text": "Le jeu est interrompu: Stanley Nwabali (Nigeria) sur blessure." },
+  { "minute": 77, "extra": 0, "type": "Restart", "text": "Le match reprend suite à une courte interruption." },
+
+  { "minute": 78, "extra": 0, "type": "Handball", "text": "Main de Hazem Mastouri (Tunisie)." },
+
+  { "minute": 79, "extra": 0, "type": "Substitution", "text": "Remplacement, Nigeria. Moses Simon remplace Frank Onyeka." },
+  { "minute": 79, "extra": 0, "type": "Substitution", "text": "Remplacement, Nigeria. Chidera Ejuke remplace Akor Adams." },
+
+  { "minute": 80, "extra": 0, "type": "Corner", "text": "Corner, Tunisie. Corner concédé par Chidera Ejuke." },
+  { "minute": 81, "extra": 0, "type": "ShotBlocked", "text": "Tir contré. Ferjani Sassi (Tunisie) de la tête de la gauche du coeur de la surface de réparation. Dernière passe de Hannibal Mejbri suite à un centre." },
+  { "minute": 81, "extra": 0, "type": "Corner", "text": "Corner, Tunisie. Corner concédé par Victor Osimhen." },
+
+  { "minute": 83, "extra": 0, "type": "Corner", "text": "Corner, Tunisie. Corner concédé par Semi Ajayi." },
+  { "minute": 83, "extra": 0, "type": "PenaltyConceded", "text": "Penalty concédé par Bright Osayi-Samuel (Nigeria)." },
+
+  { "minute": 84, "extra": 0, "type": "VAR", "text": "Décision VAR : Penalty pour Tunisie." },
+
+  { "minute": 87, "extra": 0, "type": "GoalPenalty", "text": "But! Nigeria 3, Tunisie 2. Ali Abdi (Tunisie) transforme le penalty du pied gauche sous la barre transversale." },
+
+  { "minute": 88, "extra": 0, "type": "Foul", "text": "Faute de Hazem Mastouri (Tunisie)." },
+  { "minute": 88, "extra": 0, "type": "FreeKickAwarded", "text": "Calvin Bassey (Nigeria) se voit accorder un coup franc dans sa moitié de terrain." },
+
+  { "minute": 90, "extra": 1, "type": "StoppageTime", "text": "Le quatrième arbitre vient d'indiquer 7 minutes de temps additionnel." },
+  { "minute": 90, "extra": 1, "type": "FreeKickAwarded", "text": "Dylan Bronn (Tunisie) se voit accorder un coup franc dans sa moitié de terrain." },
+  { "minute": 90, "extra": 1, "type": "Foul", "text": "Faute de Victor Osimhen (Nigeria)." },
+
+  { "minute": 90, "extra": 2, "type": "Substitution", "text": "Remplacement, Nigeria. Chidozie Awaziem remplace Ademola Lookman." },
+
+  { "minute": 90, "extra": 4, "type": "ShotSaved", "text": "Arrêt. Chidera Ejuke (Nigeria) du pied droit à droite de la surface de réparation voit son tir stoppé. Dernière passe de Chidozie Awaziem." },
+  { "minute": 90, "extra": 4, "type": "ShotOffTarget", "text": "Tir non cadré. Ferjani Sassi (Tunisie) de la tête depuis le point de penalty. Dernière passe de Sebastian Tounekti suite à un centre." },
+  { "minute": 90, "extra": 4, "type": "ShotOffTarget", "text": "Tir non cadré. Ismaël Gharbi (Tunisie) du pied droit de l'extérieur de la surface de réparation. Dernière passe de Ferjani Sassi d'une passe de la tête." },
+
+  { "minute": 90, "extra": 6, "type": "CardYellow", "text": "Stanley Nwabali (Nigeria) reçoit un carton jaune." },
+
+  { "minute": 90, "extra": 7, "type": "Stoppage", "text": "Le jeu est interrompu: (Nigeria)." },
+  { "minute": 90, "extra": 7, "type": "Restart", "text": "Le match reprend suite à une courte interruption." },
+
+  { "minute": 90, "extra": 8, "type": "MatchEnd", "text": "La deuxième mi-temps se termine, Nigeria 3, Tunisie 2." }
+]

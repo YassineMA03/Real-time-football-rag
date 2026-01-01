@@ -143,9 +143,8 @@ def chat(req: ChatReq):
         run_id=run_id,
     )
 
-router = APIRouter()
 
-@router.get("/api/debug/fs")
+@app.get("/api/debug/fs")
 def debug_fs():
     base = Path("/app")
     return {

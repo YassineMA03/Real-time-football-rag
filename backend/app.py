@@ -87,6 +87,11 @@ def next_run_id() -> str:
     return "run_" + str(int(time.time()))
 
 
+@app.get("/")
+def root():
+    return {"ok": True}
+
+
 @app.get("/api/games")
 def list_games():
     return replay_manager.list_games()

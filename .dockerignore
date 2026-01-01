@@ -8,8 +8,6 @@ __pycache__
 .pytest_cache
 dist
 build
-data
-datasets
 models
 storage
 qdrant_storage

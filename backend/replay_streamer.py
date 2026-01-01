@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 
 from kafka import KafkaProducer
-
+import os
 
 # -------------------------
 # Helpers: time extraction
@@ -139,8 +139,14 @@ class ReplayManager:
     """
 
     def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092", kafka_config: Optional[Dict[str, Any]] = None):
-        self.root = project_root
-        self.data_dir = self.root / "data" / "games"
+        self.root = Path(project_root).resolve()
+
+        # ✅ getenv default must be a string, not a Path
+        default_data_dir = str(self.root / "data" / "games")
+        data_dir_env = os.getenv("REPLAY_DATA_DIR", default_data_dir)
+
+        # ✅ always build Path from string, then resolve
+        self.data_dir = Path(data_dir_env).expanduser().resolve()
         self.kafka_bootstrap = kafka_bootstrap
         self.kafka_config = kafka_config or {}
         self._lock = threading.Lock()

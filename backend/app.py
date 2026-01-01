@@ -9,6 +9,7 @@ from typing import Dict, List, Tuple
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from fastapi import APIRouter
 
 from backend.replay_streamer import ReplayManager
 from backend.kafka_context_store import KafkaContextStore
@@ -141,3 +142,17 @@ def chat(req: ChatReq):
         match_id=req.game_id,
         run_id=run_id,
     )
+
+router = APIRouter()
+
+@router.get("/api/debug/fs")
+def debug_fs():
+    base = Path("/app")
+    return {
+        "app_exists": base.exists(),
+        "app": [p.name for p in base.iterdir()] if base.exists() else [],
+        "data_exists": (base / "data").exists(),
+        "data": [p.name for p in (base / "data").iterdir()] if (base / "data").exists() else [],
+        "games_exists": (base / "data" / "games").exists(),
+        "games": [p.name for p in (base / "data" / "games").iterdir()] if (base / "data" / "games").exists() else [],
+    }

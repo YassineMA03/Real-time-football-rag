@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from collections import deque
-
+from typing import Any, Dict, Optional
 from kafka import KafkaConsumer
 
 
@@ -205,11 +205,12 @@ class KafkaContextStore:
       - then consume Kafka topics to keep files updated continuously
     """
 
-    def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092", top_k: int = 10):
+    def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092", top_k: int = 10, kafka_config: Optional[Dict[str, Any]] = None):
         self.root = project_root
         self.kafka_bootstrap = kafka_bootstrap
         self.top_k = top_k
-
+        self.kafka_config = kafka_config or {}
+        
         self.data_dir = self.root / "data" / "games"
         self.runtime_dir = self.root / "backend" / "runtime"
         self.runtime_dir.mkdir(parents=True, exist_ok=True)
@@ -427,6 +428,7 @@ class KafkaContextStore:
             value_deserializer=lambda b: json.loads(b.decode("utf-8")),
             consumer_timeout_ms=500,
             group_id=f"ctx-comments-{int(time.time())}",
+            **self.kafka_config,
         )
         while not self._stop.is_set():
             for msg in consumer:
@@ -436,13 +438,14 @@ class KafkaContextStore:
 
     def _consume_events(self):
         consumer = KafkaConsumer(
-            "games.events",
+            "games.comments",
             bootstrap_servers=self.kafka_bootstrap,
             enable_auto_commit=True,
             auto_offset_reset="latest",
             value_deserializer=lambda b: json.loads(b.decode("utf-8")),
             consumer_timeout_ms=500,
-            group_id=f"ctx-events-{int(time.time())}",
+            group_id=f"ctx-comments-{int(time.time())}",
+            **self.kafka_config,
         )
         while not self._stop.is_set():
             for msg in consumer:
@@ -452,13 +455,14 @@ class KafkaContextStore:
 
     def _consume_scores(self):
         consumer = KafkaConsumer(
-            "games.scores",
+            "games.comments",
             bootstrap_servers=self.kafka_bootstrap,
             enable_auto_commit=True,
             auto_offset_reset="latest",
             value_deserializer=lambda b: json.loads(b.decode("utf-8")),
             consumer_timeout_ms=500,
-            group_id=f"ctx-scores-{int(time.time())}",
+            group_id=f"ctx-comments-{int(time.time())}",
+            **self.kafka_config,
         )
         while not self._stop.is_set():
             for msg in consumer:

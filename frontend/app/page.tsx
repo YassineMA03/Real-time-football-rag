@@ -18,14 +18,16 @@ type ChatMsg = {
   ts: number;
 };
 
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
 async function fetchAvailableGames(): Promise<GameMeta[]> {
-  const res = await fetch("http://localhost:8000/api/games");
+  const res = await fetch(`${API_BASE}/api/games`);
   if (!res.ok) throw new Error("Failed to load games");
   return await res.json();
 }
 
 async function startReplay(payload: { games: { game_id: string; startAtMinute: number; startAtExtra: number }[] }) {
-  const res = await fetch("http://localhost:8000/api/replay/start", {
+  const res = await fetch(`${API_BASE}/api/replay/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -35,18 +37,18 @@ async function startReplay(payload: { games: { game_id: string; startAtMinute: n
 }
 
 async function resetReplay(): Promise<void> {
-  const res = await fetch("http://localhost:8000/api/replay/reset", { method: "POST" });
+  const res = await fetch(`${API_BASE}/api/replay/reset`, { method: "POST" });
   if (!res.ok) throw new Error("Failed to reset simulation");
 }
 
 async function fetchProgress(): Promise<any> {
-  const res = await fetch("http://localhost:8000/api/replay/progress");
+  const res = await fetch(`${API_BASE}/api/replay/progress`);
   if (!res.ok) throw new Error("Failed to load progress");
   return await res.json();
 }
 
 async function chatForGame(params: { game_id: string; message: string }): Promise<{ answer: string; contexts?: any }> {
-  const res = await fetch("http://localhost:8000/api/chat", {
+  const res = await fetch(`${API_BASE}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ game_id: params.game_id, message: params.message }),

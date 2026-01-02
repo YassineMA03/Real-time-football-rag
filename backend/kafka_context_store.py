@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Tuple
 from collections import deque
 from typing import Any, Dict, Optional
 from kafka import KafkaConsumer
-
+import os
 
 # -------------------------
 # Formatting helpers
@@ -206,12 +206,13 @@ class KafkaContextStore:
     """
 
     def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092", top_k: int = 10, kafka_config: Optional[Dict[str, Any]] = None):
-        self.root = project_root
+        p = Path(project_root).resolve()
+        self.root = p if (p / "data").exists() else p.parent  # robust
         self.kafka_bootstrap = kafka_bootstrap
         self.top_k = top_k
         self.kafka_config = kafka_config or {}
         
-        self.data_dir = self.root / "data" / "games"
+        self.data_dir = Path(os.getenv("REPLAY_DATA_DIR", str(self.root / "data" / "games"))).resolve()
         self.runtime_dir = self.root / "backend" / "runtime"
         self.runtime_dir.mkdir(parents=True, exist_ok=True)
 

@@ -14,7 +14,8 @@ from fastapi import APIRouter
 from backend.replay_streamer import ReplayManager
 from backend.kafka_context_store import KafkaContextStore
 from backend.rag_engine_simple import SimpleRagEngine
-
+from fastapi import HTTPException
+import json
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 # ✅ IMPORTANT: use env var on Railway. Local dev still defaults to localhost.
@@ -46,7 +47,7 @@ app.add_middleware(
     allow_origins=[ "https://frontend-production-6b8f.up.railway.app",  # <-- your frontend public URL
         "http://localhost:3000",
         "http://localhost:3001",],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -155,3 +156,14 @@ def debug_fs():
         "games_exists": (base / "data" / "games").exists(),
         "games": [p.name for p in (base / "data" / "games").iterdir()] if (base / "data" / "games").exists() else [],
     }
+
+RUNTIME_DIR = Path("/app/backend/runtime")  # or wherever you store it
+
+@app.get("/api/runtime/{game_id}/{kind}")
+def read_runtime(game_id: str, kind: str):
+    # example filenames — adjust to your real ones
+    # e.g. rag_scores.json, rag_events.json, rag_comments.json, rag_recap.json
+    fp = RUNTIME_DIR / game_id / f"{kind}.json"
+    if not fp.exists():
+        raise HTTPException(404, f"Missing {fp}")
+    return json.loads(fp.read_text("utf-8"))

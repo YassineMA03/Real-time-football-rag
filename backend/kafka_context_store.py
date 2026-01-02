@@ -88,7 +88,7 @@ def event_line(item: dict) -> str:
 
 
 def score_line(item: dict) -> str:
-    # Try event_time_sec first (used by most messages), fall back to tsec
+    # Try event_time_sec first (used by Kafka messages), fall back to tsec
     tsec = int(item.get("event_time_sec", 0) or item.get("tsec", 0) or 0)
     minute = item.get("minute")
     extra = item.get("extra")
@@ -115,12 +115,12 @@ def score_line(item: dict) -> str:
     return " ".join(parts).strip() + "\n"
 
 
-def header_text(run_id: str, game_id: str, known_tsec: int, score_str: str) -> str:
+def header_text(run_id: str, game_id: str, known_tsec: int, score_home: int, score_away: int) -> str:
     return (
         f"RUN: {run_id}\n"
         f"GAME: {game_id}\n"
         f"Current game time: {fmt_mmss(known_tsec)}\n"
-        f"SCORE: {score_str}\n"
+        f"SCORE: {score_home}-{score_away}\n"
         "----------------------------------------\n"
     )
 
@@ -197,9 +197,13 @@ def extract_team_name(e: dict) -> Optional[str]:
 class GameBuffers:
     comments: deque
     events: deque
-    scores: deque
+    scores: deque  # Last 10 score events (for LLM context)
     score_str: str
     known_tsec: int
+    
+    # NEW: Track full match score (accurate even with 100+ goals)
+    score_home: int = 0
+    score_away: int = 0
 
 class KafkaContextStore:
     """
@@ -309,7 +313,8 @@ class KafkaContextStore:
             rdir = self._game_runtime_dir(run_id, game_id)
             rdir.mkdir(parents=True, exist_ok=True)
 
-            hdr = header_text(run_id, game_id, buf.known_tsec, buf.score_str)
+            # Use actual tracked score (accurate even with 100+ goals)
+            hdr = header_text(run_id, game_id, buf.known_tsec, buf.score_home, buf.score_away)
 
             # separate files (still create these for reference)
             (rdir / "rag_comments.txt").write_text(hdr + "".join(list(buf.comments)), encoding="utf-8")
@@ -436,6 +441,8 @@ class KafkaContextStore:
                 scores=score_deque,
                 score_str=score_str,
                 known_tsec=offset_tsec,
+                score_home=score_home,  # ✅ Initialize with calculated score
+                score_away=score_away,  # ✅ Initialize with calculated score
             )
 
         self._write_all_files(run_id, game_id)
@@ -555,9 +562,23 @@ class KafkaContextStore:
             buf = self._buffers.get(game_id)
             if not buf:
                 return
+            
+            # Add to rolling window (last 10 for LLM)
             buf.scores.append(line)
-            buf.score_str = item.get("score_str") or buf.score_str
-            tsec = int(item.get("tsec", 0) or 0)
+            
+            # Update actual score (tracks full history)
+            score_home = item.get("score_home")
+            score_away = item.get("score_away")
+            if score_home is not None:
+                buf.score_home = int(score_home)
+            if score_away is not None:
+                buf.score_away = int(score_away)
+            
+            # Also keep score_str for compatibility
+            buf.score_str = item.get("score_str") or f"{buf.score_home}-{buf.score_away}"
+            
+            # Update timestamp
+            tsec = int(item.get("event_time_sec", 0) or item.get("tsec", 0) or 0)
             buf.known_tsec = max(buf.known_tsec, tsec)
 
         self._write_all_files(run_id, game_id)

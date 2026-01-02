@@ -205,7 +205,7 @@ class KafkaContextStore:
       - then consume Kafka topics to keep files updated continuously
     """
 
-    def _find_repo_root(p: Path) -> Path:
+    def _find_repo_root(self, p: Path) -> Path:
         """
         Accepts /app, /app/backend, /app/backend/..., etc.
         Returns the folder that contains BOTH: data/ and backend/

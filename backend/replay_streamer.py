@@ -139,21 +139,28 @@ class ReplayManager:
     """
 
     def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092", kafka_config: Optional[Dict[str, Any]] = None):
-        self.root = Path(project_root).resolve()
+        root = Path(project_root).resolve()
+        self.root = root
+        if root.is_file():
+            root = root.parent
 
-        # ✅ getenv default must be a string, not a Path
-        default_data_dir = str(self.root / "data" / "games")
-        data_dir_env = os.getenv("REPLAY_DATA_DIR", default_data_dir)
+        # Try a couple common layouts
+        candidate1 = root / "data" / "games"
+        candidate2 = root.parent / "data" / "games"
 
-        # ✅ always build Path from string, then resolve
-        self.data_dir = Path(data_dir_env).expanduser().resolve()
+        default_data_dir = candidate1 if candidate1.exists() else candidate2
+
+        # Allow override from Railway Variables
+        self.data_dir = Path(os.getenv("REPLAY_DATA_DIR", str(default_data_dir))).resolve()
+
         self.kafka_bootstrap = kafka_bootstrap
         self.kafka_config = kafka_config or {}
+
         self._lock = threading.Lock()
-        self._active_run_id: Optional[str] = None
-        self._progress: Dict[str, Dict[str, Any]] = {}
-        self._threads: Dict[str, threading.Thread] = {}
-        self._stop_flags: Dict[str, threading.Event] = {}
+        self._active_run_id = None
+        self._progress = {}
+        self._threads = {}
+        self._stop_flags = {}
 
         self.producer = KafkaProducer(
             bootstrap_servers=self.kafka_bootstrap,
@@ -165,15 +172,33 @@ class ReplayManager:
         games: List[dict] = []
         if not self.data_dir.exists():
             return games
+
         for folder in sorted(self.data_dir.iterdir()):
-            if folder.is_dir():
-                meta = folder / "meta.json"
-                if meta.exists():
-                    try:
-                        games.append(json.loads(meta.read_text(encoding="utf-8")))
-                    except Exception:
-                        pass
+            if not folder.is_dir():
+                continue
+
+            # Prefer meta.json if present
+            meta_path = folder / "meta.json"
+            if meta_path.exists():
+                try:
+                    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                    if "game_id" not in meta:
+                        meta["game_id"] = folder.name
+                    games.append(meta)
+                    continue
+                except Exception:
+                    pass
+
+            # Fallback: at least return something so frontend can show it
+            games.append({
+                "game_id": folder.name,
+                "team_home": folder.name.split("_")[0],
+                "team_away": "_".join(folder.name.split("_")[1:-1]) if len(folder.name.split("_")) > 2 else "unknown",
+                "date": folder.name.split("_")[-1] if "_" in folder.name else None,
+            })
+
         return games
+
 
     def get_progress(self) -> Dict[str, Any]:
         with self._lock:

@@ -551,7 +551,7 @@ class KafkaContextStore:
                 return
             buf.events.append(line)
             tsec = int(item.get("event_time_sec", 0) or 0)
-            buf.known_tsec = max(buf.known_tsec, tsec)
+            #buf.known_tsec = max(buf.known_tsec, tsec)
 
         self._write_all_files(run_id, game_id)
 
@@ -583,6 +583,6 @@ class KafkaContextStore:
             
             # Update timestamp
             tsec = int(item.get("event_time_sec", 0) or item.get("tsec", 0) or 0)
-            buf.known_tsec = max(buf.known_tsec, tsec)
+            #buf.known_tsec = max(buf.known_tsec, tsec)
 
         self._write_all_files(run_id, game_id)

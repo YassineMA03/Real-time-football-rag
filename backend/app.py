@@ -159,11 +159,26 @@ def debug_fs():
 
 RUNTIME_DIR = Path("/app/backend/runtime")  # or wherever you store it
 
-@app.get("/api/runtime/{game_id}/{kind}")
-def read_runtime(game_id: str, kind: str):
-    # example filenames — adjust to your real ones
-    # e.g. rag_scores.json, rag_events.json, rag_comments.json, rag_recap.json
-    fp = RUNTIME_DIR / game_id / f"{kind}.json"
-    if not fp.exists():
-        raise HTTPException(404, f"Missing {fp}")
-    return json.loads(fp.read_text("utf-8"))
+RUNTIME_DIR = PROJECT_ROOT / "backend" / "runtime"
+
+def read_runtime_file(game_id: str, fname: str):
+    p = RUNTIME_DIR / game_id / fname
+    if not p.exists():
+        raise HTTPException(status_code=404, detail=f"Missing {p}")
+    return p.read_text(encoding="utf-8")
+
+@app.get("/api/runtime/{game_id}/rag_comments")
+def runtime_comments(game_id: str):
+    return read_runtime_file(game_id, "rag_comments.txt")
+
+@app.get("/api/runtime/{game_id}/rag_events")
+def runtime_events(game_id: str):
+    return read_runtime_file(game_id, "rag_events.txt")
+
+@app.get("/api/runtime/{game_id}/rag_scores")
+def runtime_scores(game_id: str):
+    return read_runtime_file(game_id, "rag_scores.txt")
+
+@app.get("/api/runtime/{game_id}/rag_recap")
+def runtime_recap(game_id: str):
+    return read_runtime_file(game_id, "rag_recap.txt")

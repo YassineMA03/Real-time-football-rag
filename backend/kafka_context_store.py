@@ -369,11 +369,12 @@ class KafkaContextStore:
                 })
             )
 
-        # last K events BEFORE offset
-        past_events = [e for e in events if (event_time_sec(e) or 0) <= offset_tsec]
-        past_events = past_events[-self.top_k:]
+        # last K events BEFORE offset (for display/LLM context)
+        all_past_events = [e for e in events if (event_time_sec(e) or 0) <= offset_tsec]
+        past_events_for_display = all_past_events[-self.top_k:]  # Last 10 for display
+        
         event_lines = deque(maxlen=self.top_k)
-        for e in past_events:
+        for e in past_events_for_display:
             m, x = event_time_tuple(e)
             event_lines.append(
                 event_line({
@@ -387,6 +388,7 @@ class KafkaContextStore:
             )
 
         # score history (goals) BEFORE offset
+        # ⚠️ IMPORTANT: Calculate from ALL events, not just last 10!
         meta_path = gfolder / "meta.json"
         home = "Home"
         away = "Away"
@@ -401,13 +403,15 @@ class KafkaContextStore:
         score_home = 0
         score_away = 0
         goal_lines = []
-        for e in past_events:
+        
+        # Loop through ALL events to calculate accurate score
+        for e in all_past_events:  # ✅ ALL events, not just last 10!
             if not is_goal_event(e):
                 continue
             team = extract_team_name(e)
             if not team:
                 continue
-            # update
+            # update score
             if team == home:
                 score_home += 1
             elif team == away:
@@ -418,7 +422,7 @@ class KafkaContextStore:
             goal_type = e.get("detail")
 
             goal_lines.append(score_line({
-                "tsec": event_time_sec(e) or 0,
+                "event_time_sec": event_time_sec(e) or 0,  # ✅ Fixed to use event_time_sec
                 "minute": m,
                 "extra": x,
                 "score_home": score_home,

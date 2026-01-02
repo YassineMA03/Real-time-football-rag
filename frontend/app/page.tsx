@@ -17,23 +17,6 @@ type ChatMsg = {
   text: string;
   ts: number;
 };
-type LiveItem = {
-  seq: number;
-  ts: number;
-  stream: "scores" | "events" | "comments" | "recap";
-  data: any;
-};
-
-type LiveState = {
-  lastSeq: number;
-  scores: LiveItem[];
-  events: LiveItem[];
-  comments: LiveItem[];
-  recap: LiveItem[];
-};
-
-const EMPTY_LIVE: LiveState = { lastSeq: 0, scores: [], events: [], comments: [], recap: [] };
-
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
@@ -86,7 +69,6 @@ function toIntSafe(v: string): number {
   return Math.floor(n);
 }
 
-
 export default function Page() {
   const [allGames, setAllGames] = useState<GameMeta[]>([]);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -107,49 +89,6 @@ export default function Page() {
   const [chatSending, setChatSending] = useState(false);
   const [chatByGame, setChatByGame] = useState<Record<string, ChatMsg[]>>({});
   const chatEndRef = useRef<HTMLDivElement | null>(null);
-  const [live, setLive] = useState<LiveState>(EMPTY_LIVE);
-  const [liveErr, setLiveErr] = useState<string | null>(null);
-  useEffect(() => {
-    if (!activeChatGameId) {
-      setLive(EMPTY_LIVE);
-      return;
-    }
-
-    setLive(EMPTY_LIVE);
-    setLiveErr(null);
-
-    const url = `${API_BASE}/api/debug/rag/${activeChatGameId}/stream?after_seq=0`;
-    const es = new EventSource(url);
-
-    es.addEventListener("update", (ev: MessageEvent) => {
-      try {
-        const payload = JSON.parse(ev.data);
-        const items: LiveItem[] = payload.items ?? [];
-        const lastSeq: number = payload.last_seq ?? 0;
-
-        setLive((prev) => {
-          let next: LiveState = { ...prev, lastSeq };
-
-          for (const it of items) {
-            if (it.stream === "scores") next.scores = [...next.scores, it].slice(-200);
-            if (it.stream === "events") next.events = [...next.events, it].slice(-200);
-            if (it.stream === "comments") next.comments = [...next.comments, it].slice(-200);
-            if (it.stream === "recap") next.recap = [...next.recap, it].slice(-200);
-          }
-
-          return next;
-        });
-      } catch (e: any) {
-        setLiveErr(e?.message ?? "Failed to parse live stream");
-      }
-    });
-
-    es.onerror = () => {
-      setLiveErr("Live stream disconnected (SSE error). Check backend / CORS.");
-    };
-
-    return () => es.close();
-  }, [activeChatGameId]);
 
   useEffect(() => {
     (async () => {
@@ -275,29 +214,6 @@ export default function Page() {
       setChatSending(false);
     }
   }
-  function LivePanel({ title, items }: { title: string; items: LiveItem[] }) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-      <div className="text-sm font-semibold">{title}</div>
-      <div className="mt-2 h-56 overflow-y-auto space-y-2">
-        {items.length === 0 ? (
-          <div className="text-xs text-zinc-500">No items yet.</div>
-        ) : (
-          items.map((it) => (
-            <div key={it.seq} className="rounded-lg border bg-white p-2">
-              <div className="text-[11px] text-zinc-500">
-                seq {it.seq} • {new Date(it.ts * 1000).toLocaleTimeString()}
-              </div>
-              <pre className="mt-1 text-xs whitespace-pre-wrap break-words">
-                {JSON.stringify(it.data, null, 2)}
-              </pre>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
 
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-900">
@@ -479,22 +395,6 @@ export default function Page() {
           </div>
         </section>
       </div>
-      <section className="rounded-2xl border bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold">Live scores / events / comments (debug)</h2>
-        <p className="text-sm text-zinc-600">
-          {activeChatGameId ? `Game: ${activeChatGameId} • lastSeq: ${live.lastSeq}` : "Select a streaming match to view live data."}
-        </p>
-
-        {liveErr && <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{liveErr}</div>}
-
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <LivePanel title="Scores" items={live.scores} />
-          <LivePanel title="Events" items={live.events} />
-          <LivePanel title="Comments" items={live.comments} />
-          <LivePanel title="Recap" items={live.recap} />
-        </div>
-      </section>
-
     </main>
   );
 }

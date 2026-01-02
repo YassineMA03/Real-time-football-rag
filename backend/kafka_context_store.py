@@ -88,16 +88,20 @@ def event_line(item: dict) -> str:
 
 
 def score_line(item: dict) -> str:
-    tsec = int(item.get("tsec", 0) or 0)
+    # Try event_time_sec first (used by most messages), fall back to tsec
+    tsec = int(item.get("event_time_sec", 0) or item.get("tsec", 0) or 0)
     minute = item.get("minute")
     extra = item.get("extra")
     score_str = item.get("score_str") or f"{item.get('score_home', 0)}-{item.get('score_away', 0)}"
     ts = time_str(minute, extra, tsec)
 
-    team = item.get("team")
-    scorer = item.get("scorer")
-    assist = item.get("assist")
-    goal_type = item.get("goal_type")
+    # Extract goal data - could be in different formats
+    goal_data = item.get("goal_data") or {}
+    
+    team = goal_data.get("team") or item.get("team")
+    scorer = goal_data.get("scorer") or item.get("scorer")
+    assist = goal_data.get("assist") or item.get("assist")
+    goal_type = goal_data.get("type") or item.get("goal_type") or item.get("why")
 
     parts = [f"[GAME {ts}] SCORE: {score_str}"]
     if team:
@@ -196,7 +200,6 @@ class GameBuffers:
     scores: deque
     score_str: str
     known_tsec: int
-
 
 class KafkaContextStore:
     """

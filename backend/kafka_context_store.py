@@ -205,15 +205,36 @@ class KafkaContextStore:
       - then consume Kafka topics to keep files updated continuously
     """
 
-    def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092", top_k: int = 10, kafka_config: Optional[Dict[str, Any]] = None):
-        p = Path(project_root).resolve()
-        self.root = p if (p / "data").exists() else p.parent  # robust
+    def _find_repo_root(p: Path) -> Path:
+        """
+        Accepts /app, /app/backend, /app/backend/..., etc.
+        Returns the folder that contains BOTH: data/ and backend/
+        """
+        cur = p.resolve()
+        for _ in range(6):  # climb a few levels max
+            if (cur / "data").exists() and (cur / "backend").exists():
+                return cur
+            if cur.parent == cur:
+                break
+            cur = cur.parent
+        # fallback: keep your old logic
+        return p.resolve() if (p.resolve() / "data").exists() else p.resolve().parent
+
+
+    def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092",
+                top_k: int = 10, kafka_config: Optional[Dict[str, Any]] = None):
+
+        self.root = _find_repo_root(Path(project_root))
+
         self.kafka_bootstrap = kafka_bootstrap
         self.top_k = top_k
         self.kafka_config = kafka_config or {}
-        
+
+        # Data location (Railway best: set REPLAY_DATA_DIR=/app/data/games)
         self.data_dir = Path(os.getenv("REPLAY_DATA_DIR", str(self.root / "data" / "games"))).resolve()
-        self.runtime_dir = self.root / "backend" / "runtime"
+
+        # Runtime location (optional env override)
+        self.runtime_dir = Path(os.getenv("REPLAY_RUNTIME_DIR", str(self.root / "backend" / "runtime"))).resolve()
         self.runtime_dir.mkdir(parents=True, exist_ok=True)
 
         self._lock = threading.Lock()

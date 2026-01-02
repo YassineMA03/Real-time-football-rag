@@ -224,7 +224,7 @@ class KafkaContextStore:
     def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092",
                 top_k: int = 10, kafka_config: Optional[Dict[str, Any]] = None):
 
-        self.root = _find_repo_root(Path(project_root))
+        self.root = self._find_repo_root(Path(project_root))
 
         self.kafka_bootstrap = kafka_bootstrap
         self.top_k = top_k

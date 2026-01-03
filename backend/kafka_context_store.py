@@ -474,13 +474,13 @@ class KafkaContextStore:
 
     def _consume_events(self):
         consumer = KafkaConsumer(
-            "games.comments",
+            "games.events",
             bootstrap_servers=self.kafka_bootstrap,
             enable_auto_commit=True,
             auto_offset_reset="latest",
             value_deserializer=lambda b: json.loads(b.decode("utf-8")),
             consumer_timeout_ms=500,
-            group_id=f"ctx-comments-{int(time.time())}",
+            group_id=f"ctx-events-{int(time.time())}",
             **self.kafka_config,
         )
         while not self._stop.is_set():
@@ -491,13 +491,13 @@ class KafkaContextStore:
 
     def _consume_scores(self):
         consumer = KafkaConsumer(
-            "games.comments",
+            "games.scores",
             bootstrap_servers=self.kafka_bootstrap,
             enable_auto_commit=True,
             auto_offset_reset="latest",
             value_deserializer=lambda b: json.loads(b.decode("utf-8")),
             consumer_timeout_ms=500,
-            group_id=f"ctx-comments-{int(time.time())}",
+            group_id=f"ctx-scores-{int(time.time())}",
             **self.kafka_config,
         )
         while not self._stop.is_set():

@@ -150,7 +150,7 @@ class ReplayManager:
       - games.state
     """
 
-    def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092"):
+    def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092", kafka_config: Optional[Dict[str, Any]] = None):
         root = Path(project_root).resolve()
         self.root = root
         if root.is_file():
@@ -167,6 +167,7 @@ class ReplayManager:
 
         self.kafka_bootstrap = kafka_bootstrap
 
+        self.kafka_config = kafka_config or {}
         self._lock = threading.Lock()
         self._active_run_id: Optional[str] = None
         self._progress: Dict[str, Dict[str, Any]] = {}
@@ -176,6 +177,7 @@ class ReplayManager:
         self.producer = KafkaProducer(
             bootstrap_servers=self.kafka_bootstrap,
             value_serializer=lambda v: json.dumps(v, ensure_ascii=False).encode("utf-8"),
+            **self.kafka_config,
         )
 
     def list_games(self) -> List[dict]:

@@ -436,18 +436,50 @@ class ReplayManager:
             if cursor >= 1000000:  # Second half
                 current_minute = (cursor - 1000000) // 10000
 
-            # During injury time (45+ or 90+), advance by extra minutes only
+            # Check if there's any data in the next small increment (extra minute)
+            # vs the next full minute
+            next_small = cursor + 100  # Next extra minute
+            next_big = cursor + 10000  # Next full minute
+
+            # Count items in small vs big jump
+            has_data_in_small = False
+            has_data_in_big = False
+
+            # Check comments
+            temp_c = c_idx
+            while temp_c < len(comments) and comment_time_sec(comments[temp_c]) <= next_small:
+                has_data_in_small = True
+                break
+            temp_c = c_idx
+            while temp_c < len(comments) and comment_time_sec(comments[temp_c]) > next_small and comment_time_sec(comments[temp_c]) <= next_big:
+                has_data_in_big = True
+                break
+
+                # Check events
+            temp_e = e_idx
+            while temp_e < len(events) and (event_time_sec(events[temp_e]) or 0) <= next_small:
+                has_data_in_small = True
+                break
+            temp_e = e_idx
+            while temp_e < len(events) and (event_time_sec(events[temp_e]) or 0) > next_small and (event_time_sec(events[temp_e]) or 0) <= next_big:
+                has_data_in_big = True
+                break
+            # Decide tick size based on where data exists and current minute
             if current_minute >= 45 and current_minute < 46:
-                # First half injury time: advance by 1 extra minute
-                tick_encoded = 100
+                # First half injury time
+                if has_data_in_small:
+                    tick_encoded = 100  # Advance by 1 extra minute
+                else:
+                    # Jump to second half minute 46
+                    # Need to go from 45XXXX to 1460000
+                    tick_encoded = 1460000 - cursor  # Jump directly to 46'
             elif current_minute >= 90:
-                # Second half injury time: advance by 1 extra minute
-                tick_encoded = 100
+                # Second half injury time: use small tick if there's data
+                tick_encoded = 100 if has_data_in_small else 10000
             else:
                 # Normal time: advance by 1 full minute
                 tick_encoded = 10000
-
-            print(f"tick_sec={tick_sec}, current_minute={current_minute}, tick_encoded={tick_encoded}")
+            print(f"tick_sec={tick_sec}, current_minute={current_minute}, tick_encoded={tick_encoded}, has_data_in_small={has_data_in_small}")
             cursor += tick_encoded
             print(f"Cursor advanced to {cursor}")
             window_end = cursor

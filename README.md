@@ -1,453 +1,256 @@
-# ⚽ Football Match RAG System
+# ⚽ Real-Time Football Match RAG System
 
-A real-time football match assistant that streams live match data through Kafka and uses RAG (Retrieval-Augmented Generation) with Mistral AI to answer questions about ongoing matches.
+A real-time football match streaming system with AI-powered chat using Kafka and Mistral AI.
 
-## 🎯 Overview
+## 🌐 Live Demo
 
-This system simulates a live football streaming API and provides an intelligent chatbot that can answer questions about matches in real-time. It uses:
+**[Try it here!](https://frontend-production-6b8f.up.railway.app/)**
 
-- **Kafka** for event streaming
-- **Simple file-based RAG** for context retrieval
-- **Mistral AI** for natural language responses
-- **FastAPI** backend
-- **Next.js** frontend
+_Note: This demo link may expire. If it's not working, you can run the project locally following the setup instructions below._
 
-## 🏗️ Architecture
+## 🎯 What It Does
+
+Stream football matches in real-time and chat with an AI assistant that knows what's happening in the game. Ask questions like "What's the score?" or "Who scored?" and get instant, context-aware answers.
+
+## 🏗️ How It Works
 
 ```
 Match Data (JSON files)
     ↓
-replay_streamer.py (Kafka Producer)
+Kafka Producer (replay_streamer.py) - Streams match events
     ↓
-Kafka Topics
-    ├─> games.comments
-    ├─> games.events
-    └─> games.scores
+Kafka Topics (comments, events, scores)
     ↓
-kafka_context_store.py (Kafka Consumer)
+Kafka Consumer (kafka_context_store.py) - Tracks last 30 events
     ↓
-Context Files (Last 10 of each type = 30 items total)
-    ├─> rag_comments.txt
-    ├─> rag_events.txt
-    ├─> rag_scores.txt
-    └─> rag_recap.txt (combined)
+RAG Engine (rag_engine_simple.py) - Reads context + asks Mistral AI
     ↓
-rag_engine_simple.py (RAG)
-    ↓
-Mistral AI LLM
-    ↓
-User gets intelligent answers! 🤖
+You get smart answers! 🤖
 ```
 
-## 🔥 Kafka Architecture (Core Component)
+## ✨ Features
 
-Kafka is the **heart of this system** - it enables real-time streaming, scalability, and reliability.
+- ⚡ **Real-time streaming** - Watch matches unfold minute by minute
+- 🤖 **AI chatbot** - Ask questions about the match in natural language
+- 🎮 **Multiple matches** - Stream several games at once
+- ⏰ **Start anywhere** - Begin at any minute (e.g., 45'+2, 60')
+- 📊 **Smart context** - AI knows the last 30 events (10 goals + 10 events + 10 comments)
 
-### 📊 **System Components**
+## 🚀 Quick Start
 
-**Kafka Cluster:**
+### 1. Install Kafka
 
-- Manages three topics: games.comments, games.events, games.scores
-- Each topic has one partition for ordered message delivery
-- Messages persist for 7 days (default retention)
-- Coordinated by Zookeeper for metadata management
+**macOS:**
 
-**Producer (replay_streamer.py):**
+```bash
+brew install kafka
+brew services start kafka
+```
 
-- Reads match data from JSON files
-- Publishes messages to appropriate Kafka topics
-- Each message contains: run_id, game_id, minute, extra, and event data
-- Simulates real-time API by streaming chronologically
+**Linux:**
 
-**Consumer (kafka_context_store.py):**
+```bash
+# Download and extract Kafka
+wget https://downloads.apache.org/kafka/3.6.0/kafka_2.13-3.6.0.tgz
+tar -xzf kafka_2.13-3.6.0.tgz
+cd kafka_2.13-3.6.0
 
-- Subscribes to all three Kafka topics
-- Maintains rolling buffers (last 10 items per type)
-- Automatically discards old messages when buffer is full
-- Writes context to files in backend/runtime/
+# Start Zookeeper
+bin/zookeeper-server-start.sh config/zookeeper.properties &
 
-**Topics Structure:**
+# Start Kafka
+bin/kafka-server-start.sh config/server.properties &
+```
 
-- **games.comments**: Match commentary and announcements
-- **games.events**: Goals, cards, substitutions, VAR decisions
-- **games.scores**: Score changes with goal details and scorers
+**Windows:**
 
-### 🔄 **Message Flow**
+```powershell
+# Option 1: Use WSL2 (recommended)
+# Install WSL2, then follow Linux instructions
 
-**Step 1:** Producer reads match data and publishes to Kafka topics based on event type
+# Option 2: Native Windows
+# Download from https://kafka.apache.org/downloads
+# Extract to C:\kafka
+# Run from C:\kafka:
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+# In new terminal:
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+```
 
-**Step 2:** Kafka stores messages in topics with sequential offsets for ordering
+### 2. Setup Backend
 
-**Step 3:** Consumer reads messages from all topics in order
+```bash
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-**Step 4:** Consumer maintains three rolling buffers (deques with maxlen=10)
+# Install dependencies
+pip install -r requirements.txt
 
-**Step 5:** Consumer writes four files per match:
+# Set Mistral API key (get yours at https://console.mistral.ai/)
+export MISTRAL_API_KEY="your_key_here"  # On Windows: set MISTRAL_API_KEY=your_key_here
 
-- rag_comments.txt (10 latest comments)
-- rag_events.txt (10 latest events)
-- rag_scores.txt (10 latest goals)
-- rag_recap.txt (all 30 combined - used by RAG)
+# Start backend
+uvicorn backend.app:app --reload
+```
 
-**Step 6:** RAG engine reads rag_recap.txt when user asks a question
+Backend runs on **http://localhost:8000**
 
-### ⚙️ **Key Configurations**
+### 3. Setup Frontend
 
-**Producer Settings:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-- Bootstrap server: localhost:9092
-- Message serialization: JSON
-- Acknowledgment level: Wait for leader
-- Retry attempts: 3
+Frontend runs on **http://localhost:3000**
 
-**Consumer Settings:**
+### 4. Use the App
 
-- Consumer group: rag-group
-- Offset reset: earliest (reads from beginning)
-- Auto-commit: enabled
-- Session timeout: 30 seconds
-- Max poll records: 500
+1. Open **http://localhost:3000**
+2. Select a match from "Match history"
+3. Click **"Stream selected games"**
+4. Click the match in "Currently streaming"
+5. Ask questions in the chatbot!
 
-**Context Store:**
+## 💬 Example Questions
 
-- Buffer size: 10 items per type (comments, events, scores)
-- Total context: 30 items maximum
-- File updates: After each new message
-- Directory structure: backend/runtime/{game_id}/
-
-### 📈 **Architecture Benefits**
-
-| Feature                | Benefit                                                    |
-| ---------------------- | ---------------------------------------------------------- |
-| **Decoupling**         | Producer and consumer run independently                    |
-| **Scalability**        | Can add multiple consumers for parallel processing         |
-| **Reliability**        | Messages persist; can replay from any point in time        |
-| **Ordering**           | Messages within partition maintain chronological order     |
-| **Multiple Consumers** | Easy to add analytics, logging, or monitoring              |
-| **Time Travel**        | Can start streaming from any minute (e.g., 45' +2')        |
-| **Fault Tolerance**    | If consumer crashes, it resumes from last committed offset |
-
-### 🎯 **Why Kafka?**
-
-**Event Streaming:** Perfect for sports data where events happen sequentially
-
-**Message Persistence:** Can replay entire match from any point
-
-**Consumer Groups:** Multiple services can read same data independently
-
-**Offset Management:** Track where each consumer is in the stream
-
-**Scalability:** Handle thousands of events per second across multiple matches
-
-### 🔍 **Monitoring**
-
-You can monitor Kafka health with built-in tools:
-
-**Check active topics:** See what topics exist in the cluster
-
-**View messages:** Read messages from any topic to verify data flow
-
-**Monitor consumer groups:** Check if consumers are processing messages
-
-**Check consumer lag:** See how far behind consumers are from latest messages
-
-This helps debug issues like:
-
-- Messages not being consumed
-- Old run_id causing rejections
-- Consumer offset reset problems
-- Topic retention issues
+- "What's the score?"
+- "Who scored?"
+- "Any yellow cards?"
+- "What happened in the last 5 minutes?"
+- "Tell me about the goals"
 
 ## 📁 Project Structure
 
 ```
 project/
 ├── backend/
-│   ├── app.py                    # FastAPI application
-│   ├── replay_streamer.py        # Kafka producer (simulates live API)
-│   ├── kafka_context_store.py   # Kafka consumer (maintains context)
-│   ├── rag_engine_simple.py     # RAG engine with Mistral AI
-│   ├── runtime/                 # Generated context files
-│   │   └── {game_id}/
-│   │        ├── rag_comments.txt
-│   │        ├── rag_events.txt
-│   │        ├── rag_scores.txt
-│   │        └── rag_recap.txt    # Combined (used by RAG)
+│   ├── app.py                    # FastAPI server
+│   ├── replay_streamer.py        # Kafka producer (streams events)
+│   ├── kafka_context_store.py   # Kafka consumer (tracks context)
+│   ├── rag_engine_simple.py     # AI chatbot with Mistral
+│   └── runtime/                 # Generated context files
+│       └── {game_id}/
+│           └── rag_recap.txt    # Last 30 events (used by AI)
 ├── data/
-│   │   ├── events.json          # Match events
-│   │   └── comments.json        # Match commentary
+│   └── games/
+│       └── {game_id}/
+│           ├── meta.json        # Match info
+│           ├── events.json      # Goals, cards, subs
+│           └── comments.json    # Commentary
 ├── frontend/
 │   └── app/
-│       └── page.tsx             # Next.js UI
-└── README.md
+│       └── page.tsx             # React UI
+└── requirements.txt
 ```
-
-## ✨ Features
-
-### Backend
-
-- ✅ **Real-time streaming** simulation with Kafka
-- ✅ **Tuple-based time ordering** (45' +1' < 45' +3' < 46')
-- ✅ **Contextual LLM responses** with Mistral AI
-- ✅ **Multiple match support** (stream multiple games simultaneously)
-- ✅ **Start at any time** (e.g., 60')
-- ✅ **Automatic context management** (last 30 items: 10 scores + 10 events + 10 comments)
-
-### Frontend
-
-- ✅ **Match selection** with custom start time (minute + extra)
-- ✅ **Live match status** (score, time, status)
-- ✅ **Per-match chatbot** with scrollable history
-- ✅ **Auto-hide started matches** from history
-- ✅ **Real-time updates** every second
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.9+
-- Node.js 18+
-- Kafka
-- Mistral API key
-
-### 1. Install Kafka
-
-**macOS (Homebrew):**
-
-```bash
-brew install kafka
-```
-
-**Linux (Manual):**
-
-```bash
-# Download Kafka
-wget https://downloads.apache.org/kafka/3.6.0/kafka_2.13-3.6.0.tgz
-tar -xzf kafka_2.13-3.6.0.tgz
-cd kafka_2.13-3.6.0
-```
-
-**Windows:**
-
-```powershell
-# Download Kafka from https://kafka.apache.org/downloads
-# Extract to C:\kafka
-
-# Or use Chocolatey:
-choco install kafka
-
-# Or use WSL2 (recommended):
-# Install WSL2 with Ubuntu, then follow Linux instructions above
-```
-
-### 2. Setup Backend
-
-**Create Python virtual environment (recommended):**
-
-```bash
-# Navigate to project directory
-cd football-rag-system
-
-# Create virtual environment
-python -m venv venv
-
-# Activate it:
-# macOS/Linux:
-source venv/bin/activate
-
-# Windows:
-venv\Scripts\activate
-
-# You should see (venv) in your terminal prompt
-```
-
-**Install Python dependencies:**
-
-```bash
-# Then install from file:
-pip install -r requirements.txt
-```
-
-**Set environment variables:**
-
-```bash
-# Create .env file in project root
-# Add your Mistral API key:
-
-# macOS/Linux:
-echo "MISTRAL_API_KEY=your_mistral_api_key_here" > .env
-echo "MISTRAL_MODEL=mistral-small-latest" >> .env
-
-# Windows (PowerShell):
-"MISTRAL_API_KEY=your_mistral_api_key_here" | Out-File -FilePath .env -Encoding utf8
-"MISTRAL_MODEL=mistral-small-latest" | Out-File -FilePath .env -Append -Encoding utf8
-
-# Or manually create .env file with:
-# MISTRAL_API_KEY=your_actual_key_here
-# MISTRAL_MODEL=mistral-small-latest
-```
-
-**Get Mistral API Key:** https://console.mistral.ai/
-
-**Note:** The virtual environment keeps dependencies isolated and prevents conflicts with other Python projects.
-
-### 3. Setup Frontend
-
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install dependencies
-npm install
-
-# This will install Next.js and all required packages from package.json
-```
-
-### 4. Start Services
-
-**Terminal 1 - Kafka:**
-
-```bash
-# macOS/Linux:
-kafka-server-start /usr/local/etc/kafka/server.properties
-
-# Windows (PowerShell from C:\kafka):
-.\bin\windows\kafka-server-start.bat .\config\server.properties
-
-# Or if using WSL2:
-kafka-server-start /usr/local/etc/kafka/server.properties
-```
-
-**Terminal 2 - Backend:**
-
-```bash
-# Make sure virtual environment is activated
-# You should see (venv) in your prompt
-# If not:
-# macOS/Linux: source venv/bin/activate
-# Windows: venv\Scripts\activate
-
-# Start backend
-uvicorn backend.app:app --reload
-# Backend running on http://localhost:8000
-```
-
-**Terminal 3 - Frontend:**
-
-```bash
-cd frontend
-npm run dev
-# Frontend running on http://localhost:3000
-```
-
-### 5. Use the App
-
-1. Open http://localhost:3000
-2. Select a match from **Match history**
-3. Set **Start minute** and **Extra** (e.g., 60)
-4. Click **"Stream selected games"**
-5. Match appears in **Currently streaming**
-6. Click the match to activate chatbot
-7. Ask questions like:
-   - "What's the score?"
-   - "Who scored?"
-   - "Any yellow cards?"
-   - "Tell me about the goals"
-
-## 📊 How It Works
-
-### Context Management
-
-The system maintains a **rolling window** of the last 10 items of each type:
-
-| Type     | Count  | Description                              |
-| -------- | ------ | ---------------------------------------- |
-| Comments | max 10 | Latest commentary                        |
-| Events   | max 10 | Recent match events (goals, cards, subs) |
-| Scores   | max 10 | Goal details with scorers                |
-
-**Total context: 30 items** (combined in `rag_recap.txt`)
-
-### RAG Process
-
-1. **User asks question** → "What's the score?"
-2. **Read context** → `backend/runtime/{game_id}/rag_recap.txt`
-3. **Build prompt** → Combine question + context
-4. **Call Mistral** → Generate answer
-5. **Return response** → "Nigeria is leading 2-0..."
 
 ## 🔧 Configuration
 
-### Backend (`backend/app.py`)
+### Environment Variables
 
-```python
-KAFKA_BOOTSTRAP = "localhost:9092"  # Kafka server
-TICK_SEC_DEFAULT = 60               # Stream tick interval (seconds)
+```bash
+# Required
+export MISTRAL_API_KEY="your_mistral_key"
+
+# Optional (defaults shown)
+export MISTRAL_MODEL="mistral-small-latest"
+export KAFKA_BOOTSTRAP="localhost:9092"
 ```
 
-### Kafka Topics
+## 📊 How the AI Works
 
-```python
-TOPICS = {
-    "games.comments": "Match commentary",
-    "games.events": "Match events (goals, cards, etc.)",
-    "games.scores": "Score changes with goal details"
+### Context Window
+
+The AI sees the **last 30 events**:
+
+- **10 goals** with scorer info
+- **10 events** (cards, subs, VAR)
+- **10 comments** (commentary)
+
+### Why Not Vector Search?
+
+We use **simple file-based RAG** instead of vector databases because:
+
+✅ **Recent context is what matters** - You care about the last 10 events, not searching through 500  
+✅ **Simpler** - No embeddings, no Qdrant, no complexity  
+✅ **Faster** - Direct file read (~1ms) vs vector search  
+✅ **Cheaper** - No embedding API calls  
+✅ **Perfect for live matches** - Chronological order, not semantic similarity
+
+## 🎮 Advanced Usage
+
+### Start at Specific Time
+
+```bash
+# Start at minute 45, extra time +2
+{
+  "games": [{
+    "game_id": "chelsea_aston_villa_2025-12-27",
+    "startAtMinute": 45,
+    "startAtExtra": 2
+  }]
 }
 ```
 
-### Context Store (`backend/kafka_context_store.py`)
+### Stream Multiple Matches
 
-```python
-top_k = 10  # Keep last 10 items per type
+```bash
+# Stream 3 matches at once
+{
+  "games": [
+    {"game_id": "match1", "startAtMinute": 0, "startAtExtra": 0},
+    {"game_id": "match2", "startAtMinute": 45, "startAtExtra": 0},
+    {"game_id": "match3", "startAtMinute": 60, "startAtExtra": 0}
+  ]
+}
 ```
 
-### RAG Engine (`backend/rag_engine_simple.py`)
+## 🐛 Troubleshooting
 
-```python
-MISTRAL_MODEL = "mistral-small-latest"  # LLM model
-max_tokens = 300                        # Response length
-temperature = 0.2                       # Response creativity
+### "Failed to load games"
+
+**Check backend is running:**
+
+```bash
+curl http://localhost:8000/api/games
+# Should return JSON with game list
 ```
 
-## 🎮 Usage Examples
+**Check game data exists:**
 
-### Example 1: Start from Beginning
+```bash
+ls -la data/games/
+# Should show game folders with meta.json, events.json, comments.json
+```
 
-1. Select **Chelsea vs Aston Villa**
-2. Leave **Start minute** = 0, **Extra** = 0
-3. Click **Stream selected games**
-4. Ask: "What happened so far?"
+### "No context available"
 
-### Example 2: Start from Added Time
+**Wait for streaming to start** - Context builds as events stream
 
-1. Select **Nigeria vs Tunisia**
-2. Set **Start minute** = 45, **Extra** = 2
-3. Click **Stream selected games**
-4. Stream starts at 45' +2' (end of 1st half)
+**Check Kafka is running:**
 
-### Example 3: Multiple Matches
+```bash
+# Should show active brokers
+kafka-broker-api-versions.sh --bootstrap-server localhost:9092
+```
 
-1. Select **multiple games**
-2. Set different start times for each
-3. Click **Stream selected games**
-4. Switch between matches in chatbot
+### "Mistral API error"
 
-## 📝 API Endpoints
+**Check API key is set:**
+
+```bash
+echo $MISTRAL_API_KEY  # Should show your key
+```
+
+**Verify key is valid** at https://console.mistral.ai/
+
+## 📝 API Reference
 
 ### `GET /api/games`
 
 List available matches
-
-```json
-[
-  {
-    "game_id": "chelsea_aston_villa_2025-12-27",
-    "team_home": "Chelsea",
-    "team_away": "Aston Villa",
-    "final_score": "3-0"
-  }
-]
-```
 
 ### `POST /api/replay/start`
 
@@ -457,9 +260,9 @@ Start streaming match(es)
 {
   "games": [
     {
-      "game_id": "chelsea_aston_villa_2025-12-27",
-      "startAtMinute": 45,
-      "startAtExtra": 1
+      "game_id": "match_id",
+      "startAtMinute": 0,
+      "startAtExtra": 0
     }
   ]
 }
@@ -469,347 +272,116 @@ Start streaming match(es)
 
 Get current match status
 
-```json
-{
-  "run_id": "run_1735600000",
-  "active_game_ids": ["chelsea_aston_villa_2025-12-27"],
-  "progress": {
-    "chelsea_aston_villa_2025-12-27": {
-      "status": "streaming",
-      "score_str": "2-0",
-      "known_minute": 46,
-      "known_extra": 0
-    }
-  }
-}
-```
-
 ### `POST /api/chat`
 
-Ask question about match
+Ask AI about match
 
 ```json
 {
-  "game_id": "chelsea_aston_villa_2025-12-27",
+  "game_id": "match_id",
   "message": "What's the score?"
-}
-```
-
-Response:
-
-```json
-{
-  "answer": "Chelsea is currently leading 2-0 against Aston Villa...",
-  "contexts": {
-    "rag_recap": "[GAME 37' | 1st Half] SCORE: 1-0 | ⚽ Joao Pedro..."
-  }
 }
 ```
 
 ### `POST /api/replay/reset`
 
-Stop all streams and reset
+Stop all streams
 
-## 🔬 Technical Details
+## 🚢 Deploy to Railway
 
-### Why No Vector Database?
+### Backend
 
-This system uses **file-based RAG** instead of vector search because:
+1. Create new Railway project
+2. Connect your GitHub repo
+3. Set environment variables:
+   - `MISTRAL_API_KEY` = your_key
+   - `KAFKA_BOOTSTRAP` = (Railway provides this)
+4. Deploy!
 
-1. ✅ **Recent context is sufficient** - Users care about the last 10 events, not searching 500+
-2. ✅ **Simpler architecture** - No Qdrant, no embeddings, no extra complexity
-3. ✅ **Faster** - Direct file read vs vector similarity search
-4. ✅ **Cheaper** - No embedding API calls
-5. ✅ **Perfect for live matches** - Chronological context, not semantic search
+### Frontend
 
-### Why Kafka?
+1. Create new Railway project
+2. Connect your GitHub repo
+3. Set environment variable:
+   - `NEXT_PUBLIC_API_URL` = https://your-backend.up.railway.app
+4. Deploy!
 
-1. ✅ **Event streaming** - Natural fit for live sports data
-2. ✅ **Scalability** - Can handle multiple matches, multiple consumers
-3. ✅ **Reliability** - Messages persist, can replay from any point
-4. ✅ **Decoupling** - Producer and consumers independent
+**Important:** Railway provides managed Kafka - you don't need to run it separately!
 
-### Context Window Strategy
+## 📦 Adding Match Data
 
-Instead of vector search, we use a **rolling window**:
+Create a folder in `data/games/` with these files:
 
-```python
-# Keep last 10 of each type in deque
-comments_buffer = deque(maxlen=10)  # Auto-discards old items
-events_buffer = deque(maxlen=10)
-scores_buffer = deque(maxlen=10)
+**meta.json:**
 
-# Combine all 30 items
-combined = scores + events + comments
+```json
+{
+  "game_id": "team1_team2_2026-01-01",
+  "team_home": "Team 1",
+  "team_away": "Team 2",
+  "competition": "League Name",
+  "date": "2026-01-01"
+}
 ```
 
-This gives the LLM **comprehensive recent context** without complexity.
-
-## 📈 Performance
-
-- **Context retrieval**: ~1ms (file read)
-- **LLM response**: ~500-1000ms (Mistral API)
-- **Total latency**: ~1 second per chat message
-- **Memory usage**: Minimal (only stores last 30 items per match)
-- **Kafka throughput**: Can handle 1000+ events/sec
-
-## 🛡️ Security Notes
-
-- **API Keys**: Never commit `.env` to git
-- **CORS**: Configured for `localhost:3000` only
-- **Validation**: All inputs validated with Pydantic
-- **Rate Limiting**: Consider adding for production
-
-## 🚢 Deployment
-
-For production deployment:
-
-1. **Use managed Kafka** (Confluent Cloud, AWS MSK)
-2. **Add authentication** (JWT tokens)
-3. **Enable HTTPS** (SSL certificates)
-4. **Add monitoring** (Prometheus, Grafana)
-5. **Scale horizontally** (multiple consumers)
-6. **Add rate limiting** (prevent API abuse)
-7. **Use production LLM** (Mistral API with higher limits)
-
-## 📤 Git Best Practices
-
-### **Before First Push**
-
-**Create .gitignore file** in project root to exclude:
-
-- Python cache files (**pycache**, \*.pyc)
-- Virtual environments (venv/, env/)
-- Environment variables (.env, \*.env)
-- Runtime data (backend/runtime/)
-- Kafka logs (/tmp/kafka-logs/)
-- Frontend dependencies (node_modules/)
-- IDE files (.vscode/, .idea/)
-- API keys and credentials
-
-**Critical files to NEVER commit:**
-
-- .env files containing API keys
-- backend/runtime/ directory
-- Kafka data directories
-- node_modules/
-- Any file containing "api_key" in the name
-
-**Always use environment variables** for sensitive data like API keys - never hardcode them in source files.
-
-### **Initial Setup**
-
-**1. Initialize repository:**
-
-- Create .gitignore first
-- Initialize git in project directory
-- Add all files (respecting .gitignore)
-- Make initial commit with descriptive message
-
-**2. Create GitHub repository:**
-
-- Use GitHub web interface or CLI
-- Choose public or private
-- Don't initialize with README (you have one)
-
-**3. Connect and push:**
-
-- Add GitHub as remote origin
-- Push your main branch
-
-### **Working with Git**
-
-**Feature development workflow:**
-
-- Create feature branch from main
-- Make changes and commit regularly
-- Push branch to GitHub
-- Create Pull Request
-- Merge after review
-- Delete branch after merge
-
-**Commit message format:**
-
-- Use clear, descriptive messages
-- Start with type: feat, fix, docs, style, refactor, test, chore
-- Keep first line under 50 characters
-- Add details in body if needed
-
-**Good commit examples:**
-
-- "feat: Add support for multiple simultaneous matches"
-- "fix: Resolve Kafka consumer offset reset issue"
-- "docs: Update README with Kafka architecture"
-
-**Bad commit examples:**
-
-- "updates"
-- "fixed stuff"
-- "changes"
-
-### **Environment Variables**
-
-**Create .env.example template** (safe to commit):
-
-- Contains variable names with placeholder values
-- Shows users what variables they need
-- Never contains real API keys
-
-**Users copy to .env and fill in real values:**
-
-- Copy .env.example to .env
-- Replace placeholders with actual keys
-- .env stays local (never committed)
-
-### **Security Checklist**
-
-**Before every commit:**
-
-- [ ] Run git status to see what will be committed
-- [ ] Verify no .env file is staged
-- [ ] Verify no API keys in code
-- [ ] Check no runtime/ or node_modules/
-- [ ] Ensure commit message is descriptive
-
-**If you accidentally commit secrets:**
-
-- Remove file from git history immediately
-- Rotate the exposed API key
-- Generate new key in Mistral Console
-- Update local .env with new key
-
-### **Repository Structure**
-
-**Commit these:**
-
-- Source code files (.py, .tsx)
-- Configuration files (without secrets)
-- Documentation (README.md)
-- Dependencies (requirements.txt, package.json)
-- .gitignore file
-- .env.example template
-
-**Never commit these:**
-
-- .env files
-- Runtime data
-- Log files
-- Cache files
-- Dependencies (node_modules/)
-- Build artifacts
-- API keys or credentials
-
-### **Large Files**
-
-**For match data files over 50MB:**
-
-- Use Git LFS (Large File Storage)
-- Track large JSON files with LFS
-- Prevents repository bloat
-
-**Alternative for very large datasets:**
-
-- Store externally (S3, Google Cloud)
-- Document how to download in README
-- Keep repository lightweight
-
-### **Clean Repository**
-
-**Before pushing:**
-
-- Remove all runtime files
-- Remove Kafka log directories
-- Remove node_modules (users run npm install)
-- Ensure .gitignore is working
-
-**Maintainability:**
-
-- Keep commits small and focused
-- Write descriptive commit messages
-- Use branches for features
-- Review changes before committing
-- Document major changes in README
-
-### **Emergency: Exposed Secrets**
-
-**If API key is committed:**
-
-**Immediate actions:**
-
-1. Go to Mistral Console immediately
-2. Revoke the exposed API key
-3. Generate new API key
-4. Update local .env file
-
-**Clean git history:**
-
-1. Remove file from all commits (advanced Git operation)
-2. Force push to rewrite history
-3. Warn collaborators about force push
-
-**Prevention:**
-
-- Always check git status before committing
-- Use .gitignore from the start
-- Never hardcode API keys
-- Use environment variables only
-
-### **Collaboration Tips**
-
-**Working with team:**
-
-- Pull latest changes before starting work
-- Use descriptive branch names (feature/add-stats)
-- Keep commits atomic (one logical change)
-- Write clear commit messages for teammates
-- Review pull requests thoroughly
-
-**Code review checklist:**
-
-- No hardcoded secrets
-- .gitignore is comprehensive
-- Code is documented
-- Tests pass
-- No debugging code left in
-
-**Branch naming:**
-
-- feature/ - New features
-- fix/ - Bug fixes
-- docs/ - Documentation
-- refactor/ - Code improvements
-- test/ - Adding tests
-
-This keeps your repository clean, secure, and professional! 🔒
-
-## 🎓 Learning Resources
-
-- [Kafka Documentation](https://kafka.apache.org/documentation/)
-- [FastAPI Tutorial](https://fastapi.tiangolo.com/tutorial/)
-- [Mistral AI Docs](https://docs.mistral.ai/)
-- [RAG Basics](https://www.pinecone.io/learn/retrieval-augmented-generation/)
+**events.json:**
+
+```json
+{
+  "response": [
+    {
+      "time": { "elapsed": 23, "extra": null },
+      "team": { "name": "Team 1" },
+      "player": { "name": "John Doe" },
+      "type": "Goal",
+      "detail": "Normal Goal"
+    }
+  ]
+}
+```
+
+**comments.json:**
+
+```json
+[
+  {
+    "minute": 1,
+    "extra": 0,
+    "type": "Commentary",
+    "text": "Match kicks off!"
+  }
+]
+```
+
+## 🎓 Tech Stack
+
+- **Backend:** FastAPI, Kafka, Mistral AI
+- **Frontend:** Next.js, React, TypeScript
+- **Streaming:** Apache Kafka
+- **AI:** Mistral (mistral-small-latest)
 
 ## 🤝 Contributing
 
-Contributions welcome! Areas for improvement:
+Contributions welcome! Ideas:
 
-- [ ] Add more match data sources
-- [ ] Implement real-time score updates
-- [ ] Add match statistics visualization
-- [ ] Support multiple languages
-- [ ] Add voice input/output
-- [ ] Implement user authentication
-- [ ] Add match highlights detection
+- [ ] Add player statistics
+- [ ] Support more data sources
+- [ ] Add match highlights
+- [ ] Multi-language support
+- [ ] Voice input/output
+- [ ] Live score notifications
 
-## 🙏 Acknowledgments
+## 🙏 Credits
 
-- **Mistral AI** for the LLM API
-- **Apache Kafka** for event streaming
-- **FastAPI** for the backend framework
-- **Next.js** for the frontend framework
+Built with:
+
+- [Apache Kafka](https://kafka.apache.org/) - Event streaming
+- [Mistral AI](https://mistral.ai/) - Language model
+- [FastAPI](https://fastapi.tiangolo.com/) - Backend framework
+- [Next.js](https://nextjs.org/) - Frontend framework
 
 ---
 
-**Built with ❤️ for football fans and AI enthusiasts**
+**Made with ⚽ and 🤖 for football fans**
 
-For questions or issues, please open a GitHub issue.
+Questions? Open an issue on GitHub!

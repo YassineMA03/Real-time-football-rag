@@ -244,8 +244,6 @@ export default function Page() {
           <h1 className="text-2xl font-semibold tracking-tight">⚽ Replay + Kafka RAG (Simple)</h1>
           <p className="mt-1 text-sm text-zinc-600">Select games, choose start minute + extra, then stream.</p>
           {/* 🔧 Debug info */}
-          <p className="mt-1 text-xs text-zinc-400">API: {API_BASE_URL}</p>
-
           <div className="mt-4 flex gap-2">
             <button
               onClick={onStart}

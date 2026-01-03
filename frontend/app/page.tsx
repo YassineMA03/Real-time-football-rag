@@ -2,6 +2,9 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+// 🔧 Use environment variable for API URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 type GameMeta = {
   game_id: string;
   team_home: string;
@@ -19,13 +22,13 @@ type ChatMsg = {
 };
 
 async function fetchAvailableGames(): Promise<GameMeta[]> {
-  const res = await fetch("http://localhost:8000/api/games");
+  const res = await fetch(`${API_BASE_URL}/api/games`);
   if (!res.ok) throw new Error("Failed to load games");
   return await res.json();
 }
 
 async function startReplay(payload: { games: { game_id: string; startAtMinute: number; startAtExtra: number }[] }) {
-  const res = await fetch("http://localhost:8000/api/replay/start", {
+  const res = await fetch(`${API_BASE_URL}/api/replay/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -35,18 +38,18 @@ async function startReplay(payload: { games: { game_id: string; startAtMinute: n
 }
 
 async function resetReplay(): Promise<void> {
-  const res = await fetch("http://localhost:8000/api/replay/reset", { method: "POST" });
+  const res = await fetch(`${API_BASE_URL}/api/replay/reset`, { method: "POST" });
   if (!res.ok) throw new Error("Failed to reset simulation");
 }
 
 async function fetchProgress(): Promise<any> {
-  const res = await fetch("http://localhost:8000/api/replay/progress");
+  const res = await fetch(`${API_BASE_URL}/api/replay/progress`);
   if (!res.ok) throw new Error("Failed to load progress");
   return await res.json();
 }
 
 async function chatForGame(params: { game_id: string; message: string }): Promise<{ answer: string; contexts?: any }> {
-  const res = await fetch("http://localhost:8000/api/chat", {
+  const res = await fetch(`${API_BASE_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ game_id: params.game_id, message: params.message }),
@@ -126,13 +129,11 @@ export default function Page() {
     [selected]
   );
 
-  // 🆕 Available games (not currently streaming)
   const availableGames = useMemo(
     () => allGames.filter((g) => !streamingGames.some((sg) => sg.game_id === g.game_id)),
     [allGames, streamingGames]
   );
 
-  // 🆕 Check if all available games are selected
   const allSelected = useMemo(
     () => availableGames.length > 0 && availableGames.every((g) => selected[g.game_id]),
     [availableGames, selected]
@@ -140,7 +141,6 @@ export default function Page() {
 
   const canStart = selectedIds.length > 0 && !starting && !resetting;
 
-  // 🆕 Toggle select all
   function onToggleSelectAll() {
     setSelected((prev) => {
       const next = { ...prev };
@@ -243,6 +243,8 @@ export default function Page() {
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-semibold tracking-tight">⚽ Replay + Kafka RAG (Simple)</h1>
           <p className="mt-1 text-sm text-zinc-600">Select games, choose start minute + extra, then stream.</p>
+          {/* 🔧 Debug info */}
+          <p className="mt-1 text-xs text-zinc-400">API: {API_BASE_URL}</p>
 
           <div className="mt-4 flex gap-2">
             <button
@@ -266,14 +268,12 @@ export default function Page() {
         {err && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{err}</div>}
 
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* History */}
           <section className="rounded-2xl border bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Match history</h2>
                 <p className="text-sm text-zinc-600">Pick games + offsets.</p>
               </div>
-              {/* 🆕 Select All Button */}
               {availableGames.length > 0 && (
                 <button
                   onClick={onToggleSelectAll}
@@ -284,7 +284,6 @@ export default function Page() {
               )}
             </div>
 
-            {/* 🆕 Scrollable container with max height */}
             <div className="mt-4 max-h-[600px] overflow-y-auto space-y-3 pr-2">
               {loading ? (
                 <div className="text-sm text-zinc-600">Loading…</div>
@@ -339,12 +338,10 @@ export default function Page() {
             </div>
           </section>
 
-          {/* Streaming */}
           <section className="rounded-2xl border bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold">Currently streaming</h2>
             <p className="text-sm text-zinc-600">Click a match to open the chatbot.</p>
 
-            {/* 🆕 Scrollable container with max height */}
             <div className="mt-4 max-h-[600px] overflow-y-auto space-y-3 pr-2">
               {streamingGames.length === 0 ? (
                 <div className="text-sm text-zinc-500">No active streams.</div>
@@ -390,7 +387,6 @@ export default function Page() {
           </section>
         </div>
 
-        {/* Chat */}
         <section className="rounded-2xl border bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold">Chatbot</h2>
           <p className="text-sm text-zinc-600">

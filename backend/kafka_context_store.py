@@ -16,30 +16,10 @@ import os
 # Formatting helpers
 # -------------------------
 
-def fmt_mmss(encoded_time: int) -> str:
-    """
-    Decode the tuple-based encoding with half-time offset.
-    Format: half_offset + minute*10000 + extra*100 + second
-    
-    Examples:
-    - 450300 = 45'+3'
-    - 1460000 = 46'+0' (second half)
-    """
-    # Remove half offset
-    if encoded_time >= 1000000:
-        encoded_time -= 1000000
-    
-    # Decode: minute*10000 + extra*100 + second
-    minute = encoded_time // 10000
-    remainder = encoded_time % 10000
-    extra = remainder // 100
-    second = remainder % 100
-    
-    # Format display
-    if extra > 0:
-        return f"{minute}' +{extra}' {second}s" if second > 0 else f"{minute}' +{extra}'"
-    else:
-        return f"{minute}:{second:02d}"
+def fmt_mmss(sec: int) -> str:
+    m = sec // 60
+    s = sec % 60
+    return f"{m}:{s:02d}"
 
 
 def half_from_minute(minute: Optional[int]) -> str:
@@ -177,13 +157,7 @@ def comment_time_sec(c: dict) -> int:
     minute = int(c.get("minute", 0) or 0)
     extra = int(c.get("extra", 0) or 0)
     second = int(c.get("second", 0) or 0)
-    
-    # Separate first half (0-45) from second half (46+)
-    # This ensures 46'+0' always comes AFTER 45'+X' regardless of X
-    half_offset = 0 if minute <= 45 else 1000000
-    
-    # Use tuple-based encoding: minute*10000 + extra*100 + second
-    return half_offset + minute * 10000 + extra * 100 + second
+    return (minute + extra) * 60 + second
 
 
 def event_time_tuple(e: dict) -> Tuple[int, int]:
@@ -199,13 +173,7 @@ def event_time_tuple(e: dict) -> Tuple[int, int]:
 
 def event_time_sec(e: dict) -> Optional[int]:
     m, x = event_time_tuple(e)
-    
-    # Separate first half (0-45) from second half (46+)
-    # This ensures 46'+0' always comes AFTER 45'+X' regardless of X
-    half_offset = 0 if m <= 45 else 1000000
-    
-    # Use tuple-based encoding
-    return half_offset + m * 10000 + x * 100
+    return (m + x) * 60
 
 
 def is_goal_event(e: dict) -> bool:
@@ -348,25 +316,19 @@ class KafkaContextStore:
             # Use actual tracked score (accurate even with 100+ goals)
             hdr = header_text(run_id, game_id, buf.known_tsec, buf.score_home, buf.score_away)
 
-            # Sort and extract lines from tuples
-            comments_sorted = sorted(list(buf.comments), key=lambda x: x[0])  # Sort by (minute, extra, second)
-            events_sorted = sorted(list(buf.events), key=lambda x: x[0])
-            scores_sorted = sorted(list(buf.scores), key=lambda x: x[0])
-            
-            # Extract just the text lines (discard sort keys)
-            comments_text = "".join([line for _, line in comments_sorted])
-            events_text = "".join([line for _, line in events_sorted])
-            scores_text = "".join([line for _, line in scores_sorted])
-
             # separate files (still create these for reference)
-            (rdir / "rag_comments.txt").write_text(hdr + comments_text, encoding="utf-8")
-            (rdir / "rag_events.txt").write_text(hdr + events_text, encoding="utf-8")
-            (rdir / "rag_scores.txt").write_text(hdr + scores_text, encoding="utf-8")
+            (rdir / "rag_comments.txt").write_text(hdr + "".join(list(buf.comments)), encoding="utf-8")
+            (rdir / "rag_events.txt").write_text(hdr + "".join(list(buf.events)), encoding="utf-8")
+            (rdir / "rag_scores.txt").write_text(hdr + "".join(list(buf.scores)), encoding="utf-8")
 
             # combined file (what the chatbot will use)
-            # Include ALL items from each buffer (up to 10 each = 30 total), properly sorted
-            combined = scores_text + events_text + comments_text
-            (rdir / "rag_recap.txt").write_text(hdr + combined, encoding="utf-8")
+            # Include ALL items from each buffer (up to 10 each = 30 total)
+            combined = []
+            combined.extend(list(buf.scores))     # Up to 10 scores
+            combined.extend(list(buf.events))     # Up to 10 events
+            combined.extend(list(buf.comments))   # Up to 10 comments
+            # Don't limit - give LLM all available context (max 30 items)
+            (rdir / "rag_recap.txt").write_text(hdr + "".join(combined), encoding="utf-8")
 
     def get_topk_text(self, game_id: str) -> str:
         with self._lock:
@@ -383,10 +345,7 @@ class KafkaContextStore:
     def _bootstrap_game_from_disk(self, run_id: str, game_id: str, start_at_tuple: Tuple[int, int]):
         gfolder = self.data_dir / game_id
         minute, extra = int(start_at_tuple[0]), int(start_at_tuple[1])
-        
-        # Use new encoding with half-time offset
-        half_offset = 0 if minute <= 45 else 1000000
-        offset_tsec = half_offset + minute * 10000 + extra * 100
+        offset_tsec = (minute + extra) * 60
 
         comments = load_json_or_jsonl(gfolder, "comments")
         events = load_json_or_jsonl(gfolder, "events")
@@ -400,19 +359,15 @@ class KafkaContextStore:
         past_comments = past_comments[-self.top_k:]
         comment_lines = deque(maxlen=self.top_k)
         for c in past_comments:
-            minute = int(c.get("minute", 0) or 0)
-            extra = int(c.get("extra", 0) or 0)
-            second = int(c.get("second", 0) or 0)
-            sort_key = (minute, extra, second)
-            line = comment_line({
-                "event_time_sec": comment_time_sec(c),
-                "minute": minute,
-                "extra": extra,
-                "type": c.get("type") or "Comment",
-                "text": c.get("text") or "",
-            })
-            # Store as tuple: (sort_key, line)
-            comment_lines.append((sort_key, line))
+            comment_lines.append(
+                comment_line({
+                    "event_time_sec": comment_time_sec(c),
+                    "minute": int(c.get("minute", 0) or 0),
+                    "extra": int(c.get("extra", 0) or 0),
+                    "type": c.get("type") or "Comment",
+                    "text": c.get("text") or "",
+                })
+            )
 
         # last K events BEFORE offset (for display/LLM context)
         all_past_events = [e for e in events if (event_time_sec(e) or 0) <= offset_tsec]
@@ -421,17 +376,16 @@ class KafkaContextStore:
         event_lines = deque(maxlen=self.top_k)
         for e in past_events_for_display:
             m, x = event_time_tuple(e)
-            sort_key = (m, x, 0)
-            line = event_line({
-                "event_time_sec": event_time_sec(e) or 0,
-                "minute": m,
-                "extra": x,
-                "type": e.get("type") or "Event",
-                "detail": e.get("detail"),
-                "data": e,
-            })
-            # Store as tuple: (sort_key, line)
-            event_lines.append((sort_key, line))
+            event_lines.append(
+                event_line({
+                    "event_time_sec": event_time_sec(e) or 0,
+                    "minute": m,
+                    "extra": x,
+                    "type": e.get("type") or "Event",
+                    "detail": e.get("detail"),
+                    "data": e,
+                })
+            )
 
         # score history (goals) BEFORE offset
         # ⚠️ IMPORTANT: Calculate from ALL events, not just last 10!
@@ -466,9 +420,8 @@ class KafkaContextStore:
             scorer = e.get("player", {}).get("name") if isinstance(e.get("player"), dict) else None
             assist = e.get("assist", {}).get("name") if isinstance(e.get("assist"), dict) else None
             goal_type = e.get("detail")
-            
-            sort_key = (m, x, 0)
-            line = score_line({
+
+            goal_lines.append(score_line({
                 "event_time_sec": event_time_sec(e) or 0,  # ✅ Fixed to use event_time_sec
                 "minute": m,
                 "extra": x,
@@ -479,9 +432,7 @@ class KafkaContextStore:
                 "scorer": scorer,
                 "assist": assist,
                 "goal_type": goal_type,
-            })
-            # Store as tuple: (sort_key, line)
-            goal_lines.append((sort_key, line))
+            }))
 
         goal_lines = goal_lines[-self.top_k:]
         score_deque = deque(goal_lines, maxlen=self.top_k)
@@ -564,7 +515,6 @@ class KafkaContextStore:
         game_id = item.get("game_id")
         with self._lock:
             if self._run_id != run_id:
-                print(f"DEBUG: Rejecting msg - Store RunID: {self._run_id}, Msg RunID: {run_id}")
                 return None, None
             if game_id not in self._active_game_ids:
                 return None, None
@@ -576,19 +526,12 @@ class KafkaContextStore:
             return
 
         line = comment_line(item)
-        
-        # Extract time for sorting: (minute, extra, second)
-        minute = int(item.get("minute", 0) or 0)
-        extra = int(item.get("extra", 0) or 0)
-        second = int(item.get("second", 0) or 0)
-        sort_key = (minute, extra, second)
 
         with self._lock:
             buf = self._buffers.get(game_id)
             if not buf:
                 return
-            # Store as tuple: (sort_key, line)
-            buf.comments.append((sort_key, line))
+            buf.comments.append(line)
             # update known time
             tsec = int(item.get("event_time_sec", 0) or 0)
             buf.known_tsec = max(buf.known_tsec, tsec)
@@ -601,18 +544,12 @@ class KafkaContextStore:
             return
 
         line = event_line(item)
-        
-        # Extract time for sorting: (minute, extra, 0)
-        minute = int(item.get("minute", 0) or 0)
-        extra = int(item.get("extra", 0) or 0)
-        sort_key = (minute, extra, 0)
 
         with self._lock:
             buf = self._buffers.get(game_id)
             if not buf:
                 return
-            # Store as tuple: (sort_key, line)
-            buf.events.append((sort_key, line))
+            buf.events.append(line)
             tsec = int(item.get("event_time_sec", 0) or 0)
             #buf.known_tsec = max(buf.known_tsec, tsec)
 
@@ -624,19 +561,14 @@ class KafkaContextStore:
             return
 
         line = score_line(item)
-        
-        # Extract time for sorting: (minute, extra, 0)
-        minute = int(item.get("minute", 0) or 0)
-        extra = int(item.get("extra", 0) or 0)
-        sort_key = (minute, extra, 0)
 
         with self._lock:
             buf = self._buffers.get(game_id)
             if not buf:
                 return
             
-            # Add to rolling window (last 10 for LLM) as tuple: (sort_key, line)
-            buf.scores.append((sort_key, line))
+            # Add to rolling window (last 10 for LLM)
+            buf.scores.append(line)
             
             # Update actual score (tracks full history)
             score_home = item.get("score_home")

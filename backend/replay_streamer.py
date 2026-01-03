@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 
 from kafka import KafkaProducer
-import os
+
 
 # -------------------------
 # Helpers: time extraction
@@ -24,7 +24,13 @@ def comment_time_sec(c: dict) -> int:
     minute = int(c.get("minute", 0) or 0)
     extra = int(c.get("extra", 0) or 0)
     second = int(c.get("second", 0) or 0)
-    return (minute + extra) * 60 + second
+    
+    # Separate first half (0-45) from second half (46+)
+    # This ensures 46'+0' always comes AFTER 45'+X' regardless of X
+    half_offset = 0 if minute <= 45 else 1000000
+    
+    # Use tuple-based encoding: minute*10000 + extra*100 + second
+    return half_offset + minute * 10000 + extra * 100 + second
 
 
 def comment_time_tuple(c: dict) -> Tuple[int, int]:
@@ -51,7 +57,13 @@ def event_time_tuple(e: dict) -> Tuple[int, int]:
 
 def event_time_sec(e: dict) -> Optional[int]:
     m, x = event_time_tuple(e)
-    return (m + x) * 60
+    
+    # Separate first half (0-45) from second half (46+)
+    # This ensures 46'+0' always comes AFTER 45'+X' regardless of X
+    half_offset = 0 if m <= 45 else 1000000
+    
+    # Use tuple-based encoding
+    return half_offset + m * 10000 + x * 100
 
 
 def is_goal_event(e: dict) -> bool:
@@ -138,67 +150,35 @@ class ReplayManager:
       - games.state
     """
 
-    def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092", kafka_config: Optional[Dict[str, Any]] = None):
-        root = Path(project_root).resolve()
-        self.root = root
-        if root.is_file():
-            root = root.parent
-
-        # Try a couple common layouts
-        candidate1 = root / "data" / "games"
-        candidate2 = root.parent / "data" / "games"
-
-        default_data_dir = candidate1 if candidate1.exists() else candidate2
-
-        # Allow override from Railway Variables
-        self.data_dir = Path(os.getenv("REPLAY_DATA_DIR", str(default_data_dir))).resolve()
-
+    def __init__(self, project_root: Path, kafka_bootstrap: str = "localhost:9092"):
+        self.root = project_root
+        self.data_dir = self.root / "data" / "games"
         self.kafka_bootstrap = kafka_bootstrap
-        self.kafka_config = kafka_config or {}
 
         self._lock = threading.Lock()
-        self._active_run_id = None
-        self._progress = {}
-        self._threads = {}
-        self._stop_flags = {}
+        self._active_run_id: Optional[str] = None
+        self._progress: Dict[str, Dict[str, Any]] = {}
+        self._threads: Dict[str, threading.Thread] = {}
+        self._stop_flags: Dict[str, threading.Event] = {}
 
         self.producer = KafkaProducer(
             bootstrap_servers=self.kafka_bootstrap,
             value_serializer=lambda v: json.dumps(v, ensure_ascii=False).encode("utf-8"),
-            **self.kafka_config,
         )
 
     def list_games(self) -> List[dict]:
         games: List[dict] = []
         if not self.data_dir.exists():
             return games
-
         for folder in sorted(self.data_dir.iterdir()):
-            if not folder.is_dir():
-                continue
-
-            # Prefer meta.json if present
-            meta_path = folder / "meta.json"
-            if meta_path.exists():
-                try:
-                    meta = json.loads(meta_path.read_text(encoding="utf-8"))
-                    if "game_id" not in meta:
-                        meta["game_id"] = folder.name
-                    games.append(meta)
-                    continue
-                except Exception:
-                    pass
-
-            # Fallback: at least return something so frontend can show it
-            games.append({
-                "game_id": folder.name,
-                "team_home": folder.name.split("_")[0],
-                "team_away": "_".join(folder.name.split("_")[1:-1]) if len(folder.name.split("_")) > 2 else "unknown",
-                "date": folder.name.split("_")[-1] if "_" in folder.name else None,
-            })
-
+            if folder.is_dir():
+                meta = folder / "meta.json"
+                if meta.exists():
+                    try:
+                        games.append(json.loads(meta.read_text(encoding="utf-8")))
+                    except Exception:
+                        pass
         return games
-
 
     def get_progress(self) -> Dict[str, Any]:
         with self._lock:
@@ -241,7 +221,7 @@ class ReplayManager:
                     "start_at_extra": int(start_at_tuple[1]),
                     "known_minute": int(start_at_tuple[0]),
                     "known_extra": int(start_at_tuple[1]),
-                    "known_time_sec": int((start_at_tuple[0] + start_at_tuple[1]) * 60),
+                    "known_time_sec": (0 if start_at_tuple[0] <= 45 else 1000000) + start_at_tuple[0] * 10000 + start_at_tuple[1] * 100,
                     "comments_sent_total": 0,
                     "events_sent_total": 0,
                     "score_str": "0-0",
@@ -342,7 +322,7 @@ class ReplayManager:
                 self._progress[game_id] = p
             self._publish_state(
                 run_id, game_id, tick_sec,
-                known_time_sec=int((start_at_tuple[0] + start_at_tuple[1]) * 60),
+                known_time_sec=(0 if start_at_tuple[0] <= 45 else 1000000) + start_at_tuple[0] * 10000 + start_at_tuple[1] * 100,
                 known_minute=int(start_at_tuple[0]),
                 known_extra=int(start_at_tuple[1]),
                 status="error",
@@ -405,7 +385,10 @@ class ReplayManager:
 
         score_str = f"{score_home}-{score_away}"
         known_minute, known_extra = int(start_at_tuple[0]), int(start_at_tuple[1])
-        known_time_sec = int((known_minute + known_extra) * 60)
+        
+        # Use tuple-based encoding with half-time separation
+        half_offset = 0 if known_minute <= 45 else 1000000
+        known_time_sec = half_offset + known_minute * 10000 + known_extra * 100
 
         with self._lock:
             p = self._progress[game_id]
@@ -430,11 +413,15 @@ class ReplayManager:
         )
         self.producer.flush()
 
-        # cursor in seconds
+        # cursor in encoded time (minute*10000 + extra*100)
         cursor = known_time_sec
 
         while not stop_event.is_set():
-            cursor += tick_sec
+            # Convert tick_sec to encoded time: 60 seconds = 1 minute = 10000 encoded
+            tick_encoded = (tick_sec // 60) * 10000
+            print(f"tick_sec={tick_sec}, tick_encoded={tick_encoded}")
+            cursor += tick_encoded
+            print(f"Cursor advanced to {cursor}")
             window_end = cursor
 
             comments_batch: List[Tuple[int, dict]] = []

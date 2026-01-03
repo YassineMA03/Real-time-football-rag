@@ -1,0 +1,109 @@
+[
+  { "minute": 1, "extra": 0, "type": "Commentary", "text": "L’arbitre Tony Harrington siffle le coup d’envoi, et c’est parti pour la première mi-temps à Selhurst Park." },
+
+  { "minute": 4, "extra": 0, "type": "Stat", "text": "Marco Silva est invaincu lors de ses cinq derniers déplacements en Premier League face à Crystal Palace (W2 D3), avec cinq clean sheets." },
+
+  { "minute": 6, "extra": 0, "type": "Commentary", "text": "Crystal Palace commence bien. Clyne centre à ras de terre depuis la droite, mais Robinson parvient à dégager." },
+
+  { "minute": 9, "extra": 0, "type": "Commentary", "text": "Fulham attaque. Kevin élimine deux défenseurs et centre dans la surface, Hughes dégage mais semble touché à l’ischio-jambier." },
+
+  { "minute": 12, "extra": 0, "type": "Commentary", "text": "Hughes semble en mesure de continuer. Peu d’actions notables dans ce début de rencontre." },
+
+  { "minute": 15, "extra": 0, "type": "Stat", "text": "Crystal Palace n’a remporté que quatre de ses 20 derniers matchs à domicile de Premier League disputés en janvier." },
+
+  { "minute": 16, "extra": 0, "type": "Commentary", "text": "Le jeu est interrompu alors que Kevin reste au sol après un contact avec Lacroix. Le duel est jugé régulier." },
+
+  { "minute": 18, "extra": 0, "type": "Commentary", "text": "Kevin se relève et le jeu peut reprendre." },
+
+  { "minute": 19, "extra": 0, "type": "Card", "text": "Carton jaune pour Jorge Cuenca après un tacle en retard sur Devenny." },
+
+  { "minute": 21, "extra": 0, "type": "Highlight", "text": "Occasion pour Palace. Sur une touche, Lerma centre et Lacroix voit son ballon dévié au-dessus de la barre par Leno." },
+
+  { "minute": 24, "extra": 0, "type": "Highlight", "text": "Énorme double occasion pour Fulham. Kevin élimine Lerma, Smith Rowe frappe à côté, Wilson oblige Henderson à un arrêt, puis Jimenez manque le cadre." },
+
+  { "minute": 26, "extra": 0, "type": "Stat", "text": "Mateta n’a touché le ballon qu’à six reprises depuis le début du match." },
+
+  { "minute": 28, "extra": 0, "type": "Commentary", "text": "Fulham exerce une pression constante, mais aucun penalty n’est accordé après un contact dans la surface." },
+
+  { "minute": 31, "extra": 0, "type": "Highlight", "text": "Double occasion Palace. Guehi voit sa frappe repoussée par Leno, puis Pino manque le cadre. La VAR vérifie sans accorder de penalty." },
+
+  { "minute": 33, "extra": 0, "type": "Highlight", "text": "Fulham proche du but. Lukic est contré, le ballon revient sur Tete qui frappe au-dessus." },
+
+  { "minute": 36, "extra": 0, "type": "Stat", "text": "Après 36 minutes, Palace compte deux tirs dont un cadré, Fulham cinq tirs dont un cadré." },
+
+  { "minute": 39, "extra": 0, "type": "Assist", "text": "Nathaniel Clyne délivre un centre précis depuis la droite." },
+
+  { "minute": 39, "extra": 0, "type": "Goal", "text": "BUT ! Jean-Philippe Mateta marque de la tête à six mètres. Crystal Palace mène 1-0 face à Fulham." },
+
+  { "minute": 42, "extra": 0, "type": "Stat", "text": "Fulham affiche un bilan de W1 D2 L6 lorsqu’ils encaissent le premier but en Premier League cette saison." },
+
+  { "minute": 44, "extra": 0, "type": "Stat", "text": "Mateta inscrit son premier but hors penalty en Premier League depuis novembre." },
+
+  { "minute": 45, "extra": 0, "type": "Highlight", "text": "Presque le 2-0. Clyne reprend un centre et manque le cadre de peu." },
+
+  { "minute": 45, "extra": 0, "type": "Commentary", "text": "Quatre minutes de temps additionnel sont annoncées." },
+
+  { "minute": 45, "extra": 3, "type": "Highlight", "text": "Arrêt décisif de Henderson sur une frappe lointaine de Kevin." },
+
+  { "minute": 45, "extra": 4, "type": "Commentary", "text": "Mi-temps à Selhurst Park : Crystal Palace 1-0 Fulham." },
+
+  { "minute": 46, "extra": 0, "type": "Commentary", "text": "C’est reparti pour la seconde période." },
+
+  { "minute": 46, "extra": 0, "type": "Card", "text": "Carton jaune pour Joachim Andersen pour contestation." },
+
+  { "minute": 49, "extra": 0, "type": "Stat", "text": "Depuis la saison dernière, Fulham a remporté plus de matchs à l’extérieur en étant mené à la mi-temps que toute autre équipe." },
+
+  { "minute": 50, "extra": 0, "type": "Injury", "text": "Kenny Tete reste au sol et reçoit des soins pour les ischio-jambiers." },
+
+  { "minute": 51, "extra": 0, "type": "Substitution", "text": "Changement Fulham : Timothy Castagne remplace Kenny Tete." },
+
+  { "minute": 53, "extra": 0, "type": "Highlight", "text": "Contre Palace. Devenny frappe, mais Berge intercepte brillamment." },
+
+  { "minute": 55, "extra": 0, "type": "Injury", "text": "Will Hughes reste au sol et semble touché." },
+
+  { "minute": 57, "extra": 0, "type": "Substitution", "text": "Changement Palace : Jaydee Canvot remplace Will Hughes." },
+
+  { "minute": 58, "extra": 0, "type": "Highlight", "text": "POTEAU ! Jimenez place une tête sur le montant après un centre de Robinson." },
+
+  { "minute": 60, "extra": 0, "type": "Card", "text": "Carton jaune pour Emile Smith Rowe après une faute sur Lacroix." },
+
+  { "minute": 61, "extra": 0, "type": "Commentary", "text": "Mateta se présente face à Leno mais l’arbitre assistant signale un hors-jeu." },
+
+  { "minute": 64, "extra": 0, "type": "Stat", "text": "Palace compte huit tirs dont deux cadrés, Fulham dix tirs dont deux cadrés." },
+
+  { "minute": 68, "extra": 0, "type": "Substitution", "text": "Changement Fulham : Tom Cairney remplace Sander Berge." },
+
+  { "minute": 73, "extra": 0, "type": "Commentary", "text": "Crystal Palace obtient un corner après un centre dévié de Mitchell." },
+
+  { "minute": 74, "extra": 0, "type": "Highlight", "text": "Sauvé sur la ligne ! Leno repousse sur sa barre et Guehi dégage sur la ligne." },
+
+  { "minute": 77, "extra": 0, "type": "Highlight", "text": "Arrêt de Henderson sur une tête de Castagne après un centre de Kevin." },
+
+  { "minute": 80, "extra": 0, "type": "Assist", "text": "Sasa Lukic délivre une passe décisive pour Cairney." },
+
+  { "minute": 80, "extra": 0, "type": "Goal", "text": "BUT ! Tom Cairney égalise d’une frappe enroulée superbe. Crystal Palace 1-1 Fulham." },
+
+  { "minute": 81, "extra": 0, "type": "Card", "text": "Carton jaune pour Tom Cairney pour avoir retiré son maillot." },
+
+  { "minute": 82, "extra": 0, "type": "Substitution", "text": "Changement Palace : Christantus Uche remplace Yéremi Pino." },
+
+  { "minute": 82, "extra": 0, "type": "Substitution", "text": "Changement Palace : Romain Esse remplace Justin Devenny." },
+
+  { "minute": 85, "extra": 0, "type": "Substitution", "text": "Changement Fulham : Adama Traoré remplace Harry Wilson." },
+
+  { "minute": 85, "extra": 0, "type": "Substitution", "text": "Changement Fulham : Harrison Reed remplace Kevin." },
+
+  { "minute": 87, "extra": 0, "type": "Stat", "text": "Depuis la saison dernière, seul Brighton a marqué plus de buts que Fulham grâce à des remplaçants en Premier League." },
+
+  { "minute": 88, "extra": 0, "type": "Card", "text": "Carton jaune pour Timothy Castagne après une faute sur Mitchell." },
+
+  { "minute": 90, "extra": 0, "type": "Commentary", "text": "Six minutes de temps additionnel sont annoncées." },
+
+  { "minute": 90, "extra": 1, "type": "Highlight", "text": "ARRÊT ÉNORME de Henderson sur une frappe à bout portant de Castagne." },
+
+  { "minute": 90, "extra": 2, "type": "Substitution", "text": "Changement Palace : Borna Sosa remplace Nathaniel Clyne." },
+
+  { "minute": 90, "extra": 5, "type": "Highlight", "text": "Andersen reprend à six mètres mais envoie sa frappe au-dessus." },
+
+  { "minute": 90, "extra": 6, "type": "Commentary", "text": "Fin du match : Crystal Palace 1-1 Fulham." }
+]

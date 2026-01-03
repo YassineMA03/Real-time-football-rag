@@ -18,16 +18,14 @@ type ChatMsg = {
   ts: number;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
-
 async function fetchAvailableGames(): Promise<GameMeta[]> {
-  const res = await fetch(`https://${API_BASE}/api/games`);
+  const res = await fetch("http://localhost:8000/api/games");
   if (!res.ok) throw new Error("Failed to load games");
   return await res.json();
 }
 
 async function startReplay(payload: { games: { game_id: string; startAtMinute: number; startAtExtra: number }[] }) {
-  const res = await fetch(`https://${API_BASE}/api/replay/start`, {
+  const res = await fetch("http://localhost:8000/api/replay/start", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -37,18 +35,18 @@ async function startReplay(payload: { games: { game_id: string; startAtMinute: n
 }
 
 async function resetReplay(): Promise<void> {
-  const res = await fetch(`https://${API_BASE}/api/replay/reset`, { method: "POST" });
+  const res = await fetch("http://localhost:8000/api/replay/reset", { method: "POST" });
   if (!res.ok) throw new Error("Failed to reset simulation");
 }
 
 async function fetchProgress(): Promise<any> {
-  const res = await fetch(`https://${API_BASE}/api/replay/progress`);
+  const res = await fetch("http://localhost:8000/api/replay/progress");
   if (!res.ok) throw new Error("Failed to load progress");
   return await res.json();
 }
 
 async function chatForGame(params: { game_id: string; message: string }): Promise<{ answer: string; contexts?: any }> {
-  const res = await fetch(`https://${API_BASE}/api/chat`, {
+  const res = await fetch("http://localhost:8000/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ game_id: params.game_id, message: params.message }),
@@ -128,7 +126,31 @@ export default function Page() {
     [selected]
   );
 
+  // 🆕 Available games (not currently streaming)
+  const availableGames = useMemo(
+    () => allGames.filter((g) => !streamingGames.some((sg) => sg.game_id === g.game_id)),
+    [allGames, streamingGames]
+  );
+
+  // 🆕 Check if all available games are selected
+  const allSelected = useMemo(
+    () => availableGames.length > 0 && availableGames.every((g) => selected[g.game_id]),
+    [availableGames, selected]
+  );
+
   const canStart = selectedIds.length > 0 && !starting && !resetting;
+
+  // 🆕 Toggle select all
+  function onToggleSelectAll() {
+    setSelected((prev) => {
+      const next = { ...prev };
+      const newValue = !allSelected;
+      for (const g of availableGames) {
+        next[g.game_id] = newValue;
+      }
+      return next;
+    });
+  }
 
   async function onStart() {
     setErr(null);
@@ -246,59 +268,73 @@ export default function Page() {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* History */}
           <section className="rounded-2xl border bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold">Match history</h2>
-            <p className="text-sm text-zinc-600">Pick games + offsets.</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Match history</h2>
+                <p className="text-sm text-zinc-600">Pick games + offsets.</p>
+              </div>
+              {/* 🆕 Select All Button */}
+              {availableGames.length > 0 && (
+                <button
+                  onClick={onToggleSelectAll}
+                  className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium hover:bg-zinc-50"
+                >
+                  {allSelected ? "Deselect all" : "Select all"}
+                </button>
+              )}
+            </div>
 
-            <div className="mt-4 space-y-3">
+            {/* 🆕 Scrollable container with max height */}
+            <div className="mt-4 max-h-[600px] overflow-y-auto space-y-3 pr-2">
               {loading ? (
                 <div className="text-sm text-zinc-600">Loading…</div>
+              ) : availableGames.length === 0 ? (
+                <div className="text-sm text-zinc-500">All games are currently streaming.</div>
               ) : (
-                allGames
-                  .filter((g) => !streamingGames.some((sg) => sg.game_id === g.game_id)) // ✅ Hide streaming games
-                  .map((g) => (
-                    <div key={g.game_id} className="rounded-xl border border-zinc-200 p-4 hover:bg-zinc-50">
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="checkbox"
-                          checked={!!selected[g.game_id]}
-                          onChange={(e) => setSelected((p) => ({ ...p, [g.game_id]: e.target.checked }))}
-                          className="mt-1 h-4 w-4"
-                        />
+                availableGames.map((g) => (
+                  <div key={g.game_id} className="rounded-xl border border-zinc-200 p-4 hover:bg-zinc-50">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={!!selected[g.game_id]}
+                        onChange={(e) => setSelected((p) => ({ ...p, [g.game_id]: e.target.checked }))}
+                        className="mt-1 h-4 w-4"
+                      />
 
-                        <div className="flex-1">
-                          <div className="font-medium">
-                            {g.team_home} <span className="text-zinc-500">vs</span> {g.team_away}
-                          </div>
-
-                          <div className="mt-3 grid gap-2 md:grid-cols-2">
-                            <div>
-                              <label className="block text-xs font-medium text-zinc-700">Start minute</label>
-                              <input
-                                type="number"
-                                placeholder=""
-                                value={startMin[g.game_id] ?? ""}
-                                onChange={(e) => setStartMin((p) => ({ ...p, [g.game_id]: e.target.value }))}
-                                className="mt-1 w-full rounded-xl border border-zinc-200 bg-white p-2 text-sm"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-xs font-medium text-zinc-700">Extra</label>
-                              <input
-                                type="number"
-                                placeholder=""
-                                value={startExtra[g.game_id] ?? ""}
-                                onChange={(e) => setStartExtra((p) => ({ ...p, [g.game_id]: e.target.value }))}
-                                className="mt-1 w-full rounded-xl border border-zinc-200 bg-white p-2 text-sm"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="mt-2 text-xs font-mono text-zinc-500">{g.game_id}</div>
+                      <div className="flex-1">
+                        <div className="font-medium">
+                          {g.team_home} <span className="text-zinc-500">vs</span> {g.team_away}
                         </div>
+
+                        <div className="mt-3 grid gap-2 md:grid-cols-2">
+                          <div>
+                            <label className="block text-xs font-medium text-zinc-700">Start minute</label>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              value={startMin[g.game_id] ?? ""}
+                              onChange={(e) => setStartMin((p) => ({ ...p, [g.game_id]: e.target.value }))}
+                              className="mt-1 w-full rounded-xl border border-zinc-200 bg-white p-2 text-sm"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-zinc-700">Extra</label>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              value={startExtra[g.game_id] ?? ""}
+                              onChange={(e) => setStartExtra((p) => ({ ...p, [g.game_id]: e.target.value }))}
+                              className="mt-1 w-full rounded-xl border border-zinc-200 bg-white p-2 text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-2 text-xs font-mono text-zinc-500">{g.game_id}</div>
                       </div>
                     </div>
-                  ))
+                  </div>
+                ))
               )}
             </div>
           </section>
@@ -308,7 +344,8 @@ export default function Page() {
             <h2 className="text-lg font-semibold">Currently streaming</h2>
             <p className="text-sm text-zinc-600">Click a match to open the chatbot.</p>
 
-            <div className="mt-4 space-y-3">
+            {/* 🆕 Scrollable container with max height */}
+            <div className="mt-4 max-h-[600px] overflow-y-auto space-y-3 pr-2">
               {streamingGames.length === 0 ? (
                 <div className="text-sm text-zinc-500">No active streams.</div>
               ) : (
@@ -360,7 +397,7 @@ export default function Page() {
             {activeChatGameId ? `Selected: ${activeChatGameId}` : "Select a streaming match to chat."}
           </p>
 
-          <div className="mt-4 h-96 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50 p-3"> {/* ✅ Changed h-64 to h-96 and added overflow-y-auto */}
+          <div className="mt-4 h-96 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50 p-3">
             {activeChatMessages.length === 0 ? (
               <div className="text-sm text-zinc-500">No messages.</div>
             ) : (

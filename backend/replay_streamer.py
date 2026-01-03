@@ -431,9 +431,23 @@ class ReplayManager:
         cursor = known_time_sec
 
         while not stop_event.is_set():
-            # Convert tick_sec to encoded time: 60 seconds = 1 minute = 10000 encoded
-            tick_encoded = (tick_sec // 60) * 10000
-            print(f"tick_sec={tick_sec}, tick_encoded={tick_encoded}")
+            # 🔧 FIX: Adjust tick based on whether we're in injury/extra time
+            current_minute = cursor // 10000  # Extract current minute from cursor
+            if cursor >= 1000000:  # Second half
+                current_minute = (cursor - 1000000) // 10000
+
+            # During injury time (45+ or 90+), advance by extra minutes only
+            if current_minute >= 45 and current_minute < 46:
+                # First half injury time: advance by 1 extra minute
+                tick_encoded = 100
+            elif current_minute >= 90:
+                # Second half injury time: advance by 1 extra minute
+                tick_encoded = 100
+            else:
+                # Normal time: advance by 1 full minute
+                tick_encoded = 10000
+
+            print(f"tick_sec={tick_sec}, current_minute={current_minute}, tick_encoded={tick_encoded}")
             cursor += tick_encoded
             print(f"Cursor advanced to {cursor}")
             window_end = cursor

@@ -382,6 +382,6 @@ Built with:
 
 ---
 
-**Made with ⚽ and 🤖 for football fans**
+**Made for football fans**
 
 Questions? Open an issue on GitHub!
